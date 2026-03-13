@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: group_project
+server:
+  port: 8090
+logging:
+  level:
+    com:
+      dikshanta:
+        restaurant:
+          management:
+            system:
+              group_project: DEBUG
+  profiles:
+    active: dev
+
