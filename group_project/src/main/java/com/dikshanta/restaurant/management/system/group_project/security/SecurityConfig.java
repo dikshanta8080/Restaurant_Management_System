@@ -16,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -32,10 +33,11 @@ public class SecurityConfig {
 
     private static final String ADMIN_ROUTE = "/api/v1/admin/**";
     private static final String RESTAURANT_ROUTE = "/api/v1/restaurant/**";
-    private static final String PUBLIC_ROUTE = "/api/v1/public/**";
+    private static final String PUBLIC_ROUTE = "/api/v1/health/**";
     private static final String AUTH_ROUTE = "/api/v1/auth/**";
     private static final String CUSTOMER_ROUTE = "/api/v1/customer/**";
     private final CustomUserDetailsService customUserDetailsService;
+    private final JwtFilter jwtFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -57,7 +59,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
-                                PUBLIC_ROUTE
+                                PUBLIC_ROUTE,
+                                AUTH_ROUTE
                         ).permitAll()
 
                         // ADMIN ROLE ACCESS
@@ -142,6 +145,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .build();
     }

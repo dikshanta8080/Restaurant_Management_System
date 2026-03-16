@@ -13,5 +13,14 @@ logging:
           management:
             system:
               group_project: DEBUG
+utils:
+  admin:
+    name: Dikshanta Acharya
+    email: "dikshantaacharya04@gmail.com"
+    password: "@Dikshyant9898"
+    profileImagePath: "/images/user/admin.png"
+  jwt:
+    secret: E1F4C9AB8D22F6A1E9C07B3F5D88212E5A1C9F33D8E0B72C1F44A7D119CFA890
+    expiry: 15
 
 
