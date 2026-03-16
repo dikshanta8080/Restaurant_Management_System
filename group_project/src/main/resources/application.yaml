@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: group_project
 server:
@@ -11,6 +13,5 @@ logging:
           management:
             system:
               group_project: DEBUG
-  profiles:
-    active: dev
+
 
