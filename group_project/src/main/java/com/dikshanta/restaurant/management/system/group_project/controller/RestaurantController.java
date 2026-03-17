@@ -38,7 +38,7 @@ public class RestaurantController {
 
 
     @PutMapping("/updateRestaurant/{id}")
-    public ResponseEntity<ApiResponse<RestaurantCreateResponse>> updateRestaurant(@PathVariable Long id, @RequestBody @Valid RestaurantCreateRequest request) {
+    public ResponseEntity<ApiResponse<RestaurantCreateResponse>> updateRestaurant(@PathVariable Long id, @RequestBody @Valid @ModelAttribute RestaurantCreateRequest request) {
         RestaurantCreateResponse restaurant = restaurantService.updateRestaurant(id, request);
         ApiResponse<RestaurantCreateResponse> apiResponse = ApiResponse.<RestaurantCreateResponse>builder()
                 .httpStatus(HttpStatus.OK)
