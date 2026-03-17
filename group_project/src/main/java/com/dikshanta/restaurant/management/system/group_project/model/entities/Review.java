@@ -1,7 +1,7 @@
 package com.dikshanta.restaurant.management.system.group_project.model.entities;
 
 import com.dikshanta.restaurant.management.system.group_project.model.DateAuditable;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,7 +29,7 @@ public class Review extends DateAuditable {
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
-    @JsonManagedReference
+    @JsonBackReference("reviews-reference")
     private Restaurant restaurant;
 
     @ManyToOne

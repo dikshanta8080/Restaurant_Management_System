@@ -30,7 +30,7 @@ public class User extends DateAuditable {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id")
     private Address address;
-    @JsonManagedReference
+    @JsonManagedReference("restaurant-owner")
     @OneToOne(mappedBy = "owner", cascade = CascadeType.ALL)
     private Restaurant restaurant;
 

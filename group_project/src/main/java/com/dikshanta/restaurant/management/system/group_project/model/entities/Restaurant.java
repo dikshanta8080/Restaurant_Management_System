@@ -3,6 +3,7 @@ package com.dikshanta.restaurant.management.system.group_project.model.entities;
 import com.dikshanta.restaurant.management.system.group_project.enums.RestaurantStatus;
 import com.dikshanta.restaurant.management.system.group_project.model.EditorAuditable;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,22 +32,23 @@ public class Restaurant extends EditorAuditable {
     @Enumerated(EnumType.STRING)
     private RestaurantStatus status = RestaurantStatus.PENDING;
 
+    @JsonBackReference("restaurant-owner")
     @OneToOne
     @JoinColumn(name = "owner_id")
     private User owner;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id")
-    @JsonBackReference
+    @JsonManagedReference("address-reference")
     private Address address;
 
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonBackReference
+    @JsonManagedReference("fooditems-reference")
     private List<FoodItem> foodItems = new ArrayList<>();
-    @JsonBackReference
+    @JsonManagedReference("orderitems-reference")
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
-    @JsonBackReference
+    @JsonManagedReference("reviews-reference")
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
     private List<Review> reviews = new ArrayList<>();
 

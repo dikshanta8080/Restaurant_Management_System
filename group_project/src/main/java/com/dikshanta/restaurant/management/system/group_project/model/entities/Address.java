@@ -20,8 +20,11 @@ public class Address {
     private String district;
     private String city;
     private String street;
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToOne(mappedBy = "address")
     private User user;
+
+    @com.fasterxml.jackson.annotation.JsonBackReference("address-reference")
     @OneToOne(mappedBy = "address")
     private Restaurant restaurant;
 }

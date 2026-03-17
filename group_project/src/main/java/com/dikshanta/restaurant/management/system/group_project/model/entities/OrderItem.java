@@ -1,7 +1,7 @@
 package com.dikshanta.restaurant.management.system.group_project.model.entities;
 
 import com.dikshanta.restaurant.management.system.group_project.enums.OrderStatus;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,6 +38,6 @@ public class OrderItem {
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
-    @JsonManagedReference
+    @JsonBackReference("orderitems-reference")
     private Restaurant restaurant;
 }
