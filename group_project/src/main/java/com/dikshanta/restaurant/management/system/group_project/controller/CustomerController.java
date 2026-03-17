@@ -3,9 +3,9 @@ package com.dikshanta.restaurant.management.system.group_project.controller;
 import com.dikshanta.restaurant.management.system.group_project.dto.request.RestaurantCreateRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.request.UserProfileUpdateRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.RestaurantCreateResponse;
+import com.dikshanta.restaurant.management.system.group_project.dto.response.RestaurantResponse;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.UserResponse;
 import com.dikshanta.restaurant.management.system.group_project.model.ApiResponse;
-import com.dikshanta.restaurant.management.system.group_project.model.entities.Restaurant;
 import com.dikshanta.restaurant.management.system.group_project.service.RestaurantService;
 import com.dikshanta.restaurant.management.system.group_project.service.UserService;
 import jakarta.validation.Valid;
@@ -62,9 +62,9 @@ public class CustomerController {
     }
 
     @GetMapping("/allRestaurants")
-    public ResponseEntity<ApiResponse<List<Restaurant>>> getAllRestaurants() {
-        List<Restaurant> restaurants = restaurantService.getRestaurants();
-        ApiResponse<List<Restaurant>> apiResponse = ApiResponse.<List<Restaurant>>builder()
+    public ResponseEntity<ApiResponse<List<RestaurantResponse>>> getAllRestaurants() {
+        List<RestaurantResponse> restaurants = restaurantService.getRestaurants();
+        ApiResponse<List<RestaurantResponse>> apiResponse = ApiResponse.<List<RestaurantResponse>>builder()
                 .httpStatus(HttpStatus.OK)
                 .message("Parsed the restaurants")
                 .responseObject(restaurants)

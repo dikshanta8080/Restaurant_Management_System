@@ -4,6 +4,7 @@ import com.dikshanta.restaurant.management.system.group_project.configurations.S
 import com.dikshanta.restaurant.management.system.group_project.dto.request.RestaurantCreateRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.request.RestaurantStatusUpdateRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.RestaurantCreateResponse;
+import com.dikshanta.restaurant.management.system.group_project.dto.response.RestaurantResponse;
 import com.dikshanta.restaurant.management.system.group_project.enums.RestaurantStatus;
 import com.dikshanta.restaurant.management.system.group_project.exceptions.RestaurantAlreadyExistsException;
 import com.dikshanta.restaurant.management.system.group_project.exceptions.RestaurantDoesNotExistsException;
@@ -73,16 +74,34 @@ public class RestaurantService {
         restaurantRepository.save(restaurant);
     }
 
-    public List<Restaurant> getRestaurants() {
+    public List<RestaurantResponse> getRestaurants() {
 
-        return restaurantRepository.findAll();
+        List<Restaurant> restaurantList = restaurantRepository.findAll();
+        return restaurantList.stream().map(restaurant -> {
+            return RestaurantResponse.builder().
+                    id(restaurant.getId())
+                    .name(restaurant.getName())
+                    .description(restaurant.getDescription())
+                    .imageUrl(restaurant.getImageUrl())
+                    .ownerName(restaurant.getOwner().getName())
+                    .build();
+
+        }).toList();
+
     }
 
-    public Restaurant getOwnRestaurant() {
+    public RestaurantResponse getOwnRestaurant() {
         Long ownerId = securityAuditorAware.getCurrentAuditor()
                 .orElseThrow(() -> new RuntimeException("User not authenticated"));
-        return restaurantRepository.findByOwner(ownerId)
+        Restaurant restaurant = restaurantRepository.findByOwner(ownerId)
                 .orElseThrow(() -> new RestaurantDoesNotExistsException("You don't have any restaurant registered"));
+        return RestaurantResponse.builder()
+                .id(restaurant.getId())
+                .name(restaurant.getName())
+                .description(restaurant.getDescription())
+                .imageUrl(restaurant.getImageUrl())
+                .ownerName(restaurant.getOwner().getName())
+                .build();
     }
 
     @Transactional

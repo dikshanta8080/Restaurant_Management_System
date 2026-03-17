@@ -3,6 +3,7 @@ package com.dikshanta.restaurant.management.system.group_project.controller;
 import com.dikshanta.restaurant.management.system.group_project.dto.request.RestaurantCreateRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.request.UserDeleteRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.RestaurantCreateResponse;
+import com.dikshanta.restaurant.management.system.group_project.dto.response.RestaurantResponse;
 import com.dikshanta.restaurant.management.system.group_project.model.ApiResponse;
 import com.dikshanta.restaurant.management.system.group_project.service.RestaurantService;
 import com.dikshanta.restaurant.management.system.group_project.service.UserService;
@@ -36,7 +37,7 @@ public class RestaurantController {
     }
 
 
-    @PutMapping("/{id}")
+    @PutMapping("/updateRestaurant/{id}")
     public ResponseEntity<ApiResponse<RestaurantCreateResponse>> updateRestaurant(@PathVariable Long id, @RequestBody @Valid RestaurantCreateRequest request) {
         RestaurantCreateResponse restaurant = restaurantService.updateRestaurant(id, request);
         ApiResponse<RestaurantCreateResponse> apiResponse = ApiResponse.<RestaurantCreateResponse>builder()
@@ -47,7 +48,7 @@ public class RestaurantController {
         return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/deleteRestaurant/{id}")
     public ResponseEntity<ApiResponse<String>> deleteRestaurant(@PathVariable Long id) {
         restaurantService.deleteRestaurant(id);
         ApiResponse<String> apiResponse = ApiResponse.<String>builder()
@@ -56,5 +57,16 @@ public class RestaurantController {
                 .responseObject("Deleted!")
                 .build();
         return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+    }
+
+    @GetMapping("/getRestaurant")
+    public ResponseEntity<ApiResponse<RestaurantResponse>> getRestaurant() {
+        RestaurantResponse ownRestaurant = restaurantService.getOwnRestaurant();
+        ApiResponse<RestaurantResponse> apiResponse = ApiResponse.<RestaurantResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Parsed the restaurant successfully")
+                .responseObject(ownRestaurant)
+                .build();
+        return new ResponseEntity<>(apiResponse, apiResponse.getHttpStatus());
     }
 }

@@ -20,7 +20,7 @@ public class Review extends DateAuditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer rating; // 1-5
+    private Integer rating;
     private String comment;
 
     @ManyToOne
