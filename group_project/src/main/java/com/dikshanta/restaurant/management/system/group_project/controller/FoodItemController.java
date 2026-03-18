@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +22,10 @@ public class FoodItemController {
 
     private final FoodItemService foodItemService;
 
-    @PostMapping("/restaurants/{restaurantId}/food-items")
+    @PostMapping(value = "/restaurants/{restaurantId}/food-items", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<FoodItemResponse> addFoodItem(
             @PathVariable Long restaurantId,
-            @RequestBody FoodItemRequest request) {
+            @ModelAttribute FoodItemRequest request) {
         FoodItemResponse response = foodItemService.addFoodItem(restaurantId, request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

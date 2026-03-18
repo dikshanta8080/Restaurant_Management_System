@@ -35,10 +35,17 @@ public class RestaurantService {
             throw new RestaurantAlreadyExistsException("Restaurant Already exists");
 
         }
+
         Long ownerId = securityAuditorAware.getCurrentAuditor()
                 .orElseThrow(() -> new RuntimeException("User not authenticated"));
         User owner = userRepository.findById(ownerId).orElseThrow(() -> new UserDoesnotExistsException("Owner does not exists"));
-        String url = fileUploadService.uploadFile(request.getMultipartFile(), "restaurant");
+        if (restaurantRepository.existsByOwner(owner)) {
+            throw new RuntimeException("Owner already has a restaurant");
+        }
+        String imageUrl = null;
+        if (request.getMultipartFile() != null && !request.getMultipartFile().isEmpty()) {
+            imageUrl = fileUploadService.uploadFile(request.getMultipartFile(), "restaurant");
+        }
         Address address = Address.builder()
                 .province(request.getProvince())
                 .district(request.getDistrict())
@@ -51,7 +58,7 @@ public class RestaurantService {
                 .description(request.getDescription())
                 .owner(owner)
                 .address(restaurantAddress)
-                .imageUrl(url)
+                .imageUrl(imageUrl)
                 .status(RestaurantStatus.PENDING)
                 .build();
         Restaurant savedRestaurant = restaurantRepository.save(newRestaurant);
@@ -66,7 +73,6 @@ public class RestaurantService {
                 .ownerId(savedRestaurant.getOwner().getId())
                 .imageUrl(savedRestaurant.getImageUrl())
                 .build();
-
 
     }
 

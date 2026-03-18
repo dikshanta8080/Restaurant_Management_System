@@ -38,6 +38,7 @@ public class SecurityConfig {
     private static final String PUBLIC_ROUTE = "/api/v1/health/**";
     private static final String AUTH_ROUTE = "/api/v1/auth/**";
     private static final String CUSTOMER_ROUTE = "/api/v1/customer/**";
+    private static final String FOOD_ITEM_ROUTE = "/api/v1/restaurant/**";
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtFilter jwtFilter;
     private final CustomAccessDeniedHandler accessDeniedHandler;
@@ -124,6 +125,7 @@ public class SecurityConfig {
                                 ADMIN_DELETE.getPermissionName(),
                                 RESTAURANT_DELETE.getPermissionName()
                         )
+                        .requestMatchers(HttpMethod.GET).hasAnyAuthority(CUSTOMER_READ.name(), ADMIN_READ.name(), RESTAURANT_READ.name())
 
                         .anyRequest().authenticated()
                 )

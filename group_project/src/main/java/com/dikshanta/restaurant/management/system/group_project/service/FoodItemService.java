@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class FoodItemService {
+    private final FileUploadService fileUploadService;
 
     private final FoodItemRepository foodItemRepository;
     private final RestaurantRepository restaurantRepository;
@@ -58,13 +59,16 @@ public class FoodItemService {
         if (request.getCategoryId() != null) {
             category = categoryRepository.findById(request.getCategoryId()).orElseThrow(() -> new RuntimeException("Category not found"));
         }
-
+        String imageUrl = null;
+        if (request.getMultipartFile() != null && !request.getMultipartFile().isEmpty()) {
+            imageUrl = fileUploadService.uploadFile(request.getMultipartFile(), "foodItem");
+        }
         FoodItem newFoodItem = FoodItem.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
                 .available(request.getAvailable() != null ? request.getAvailable() : true)
-                .imageUrl("/dummy/path/image.jpg")
+                .imageUrl(imageUrl)
                 .restaurant(restaurant)
                 .category(category)
                 .build();
@@ -91,8 +95,8 @@ public class FoodItemService {
             foodItem.setAvailable(request.getAvailable());
         }
         if (request.getCategoryId() != null) {
-             Category category = categoryRepository.findById(request.getCategoryId()).orElseThrow(() -> new RuntimeException("Category not found"));
-             foodItem.setCategory(category);
+            Category category = categoryRepository.findById(request.getCategoryId()).orElseThrow(() -> new RuntimeException("Category not found"));
+            foodItem.setCategory(category);
         }
 
         FoodItem updatedFoodItem = foodItemRepository.save(foodItem);

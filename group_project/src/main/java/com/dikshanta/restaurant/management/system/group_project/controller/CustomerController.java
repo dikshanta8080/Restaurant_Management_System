@@ -40,6 +40,7 @@ public class CustomerController {
             @ModelAttribute RestaurantCreateRequest request
     ) {
         RestaurantCreateResponse restaurant = restaurantService.createRestaurant(request);
+        System.out.println(restaurant.getName());
 
         ApiResponse<RestaurantCreateResponse> apiResponse = ApiResponse.<RestaurantCreateResponse>builder()
                 .httpStatus(HttpStatus.CREATED)
