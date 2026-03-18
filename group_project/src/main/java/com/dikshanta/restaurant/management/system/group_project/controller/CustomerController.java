@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,9 +22,11 @@ import java.util.List;
 @RequestMapping("/api/v1/customer")
 @RequiredArgsConstructor
 public class CustomerController {
+
     private final RestaurantService restaurantService;
     private final UserService userService;
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<UserResponse>> getProfile() {
         UserResponse userResponse = userService.getUserProfile();
@@ -35,24 +38,23 @@ public class CustomerController {
         return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'RESTAURANT', 'ADMIN')")
     @PostMapping(value = "/createRestaurant", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<RestaurantCreateResponse>> createRestaurant(
-            @ModelAttribute RestaurantCreateRequest request
-    ) {
+            @ModelAttribute RestaurantCreateRequest request) {
         RestaurantCreateResponse restaurant = restaurantService.createRestaurant(request);
-        System.out.println(restaurant.getName());
-
         ApiResponse<RestaurantCreateResponse> apiResponse = ApiResponse.<RestaurantCreateResponse>builder()
                 .httpStatus(HttpStatus.CREATED)
                 .message("Restaurant creation form filled!")
                 .responseObject(restaurant)
                 .build();
-
         return new ResponseEntity<>(apiResponse, apiResponse.getHttpStatus());
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PutMapping(value = "/profileUpdate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(@ModelAttribute @Valid UserProfileUpdateRequest request) {
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
+            @ModelAttribute @Valid UserProfileUpdateRequest request) {
         UserResponse updatedProfile = userService.updateUserProfile(request);
         ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .httpStatus(HttpStatus.OK)
@@ -62,11 +64,11 @@ public class CustomerController {
         return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/greet")
     public ResponseEntity<String> greetCustomer() {
         return new ResponseEntity<>("Hello Customer", HttpStatus.OK);
     }
-
 
     @GetMapping("/allRestaurants")
     public ResponseEntity<ApiResponse<List<RestaurantResponse>>> getAllRestaurants() {
@@ -77,6 +79,5 @@ public class CustomerController {
                 .responseObject(restaurants)
                 .build();
         return new ResponseEntity<>(apiResponse, apiResponse.getHttpStatus());
-
     }
 }
