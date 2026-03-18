@@ -27,6 +27,7 @@ public class UserService {
     private final RegisterRequestMapper registerRequestMapper;
     private final SecurityAuditorAware securityAuditorAware;
     private final AddressRepository addressRepository;
+    private final FileUploadService fileUploadService;
 
     @Transactional
     public User registerUser(RegisterRequest registerRequest) {
@@ -39,7 +40,7 @@ public class UserService {
         String encodedPassword = passwordEncoder.encode(registerRequest.getPassword());
         User user = registerRequestMapper.apply(registerRequest);
         user.setPassword(encodedPassword);
-        user.setProfileImageUrl("This is dummy profile url");
+        user.setProfileImageUrl("uploads/user/dummy_profile.png");
         return userRepository.save(user);
 
     }
@@ -65,8 +66,10 @@ public class UserService {
         User user = getCurrentUser();
 
         user.setName(request.getName());
-        if (request.getProfileImageUrl() != null) {
-            user.setProfileImageUrl(request.getProfileImageUrl());
+        String imageUrl = null;
+        if (request.getMultipartFile() != null && !request.getMultipartFile().isEmpty()) {
+            imageUrl = fileUploadService.uploadFile(request.getMultipartFile(), "user");
+            user.setProfileImageUrl(imageUrl);
         }
 
         Address address = user.getAddress();

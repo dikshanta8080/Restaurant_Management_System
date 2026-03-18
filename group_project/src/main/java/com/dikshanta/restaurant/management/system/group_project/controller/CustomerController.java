@@ -51,8 +51,8 @@ public class CustomerController {
         return new ResponseEntity<>(apiResponse, apiResponse.getHttpStatus());
     }
 
-    @PutMapping("/profile")
-    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(@RequestBody @Valid UserProfileUpdateRequest request) {
+    @PutMapping(value = "/profileUpdate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(@ModelAttribute @Valid UserProfileUpdateRequest request) {
         UserResponse updatedProfile = userService.updateUserProfile(request);
         ApiResponse<UserResponse> apiResponse = ApiResponse.<UserResponse>builder()
                 .httpStatus(HttpStatus.OK)
