@@ -50,7 +50,6 @@ public class RestaurantService {
         if (request.getMultipartFile() != null && !request.getMultipartFile().isEmpty()) {
             imageUrl = fileUploadService.uploadFile(request.getMultipartFile(), "restaurant");
         }
-
         Address address = addressRepository.save(Address.builder()
                 .province(request.getProvince())
                 .district(request.getDistrict())
@@ -75,6 +74,19 @@ public class RestaurantService {
         return toCreateResponse(saved);
     }
 
+    public List<RestaurantResponse> getPendingRestaurants() {
+        return restaurantRepository.findAllByStatus(RestaurantStatus.PENDING)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public List<RestaurantResponse> getAllRestaurantsForAdmin() {
+        return restaurantRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
     public void updateRestaurantStatus(RestaurantStatusUpdateRequest request) {
         Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
@@ -83,12 +95,16 @@ public class RestaurantService {
         restaurantRepository.save(restaurant);
     }
 
+
     public List<RestaurantResponse> getRestaurants() {
         return restaurantRepository.findAllByStatus(RestaurantStatus.APPROVED)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
+
+    // ── Owner's own restaurant ───────────────────────────────────────────────
+
 
     public RestaurantResponse getOwnRestaurant() {
         User currentUser = getCurrentUser();
@@ -142,13 +158,13 @@ public class RestaurantService {
         restaurantRepository.delete(restaurant);
     }
 
+
     private User getCurrentUser() {
         Long userId = securityAuditorAware.getCurrentAuditor()
                 .orElseThrow(() -> new RuntimeException("User not authenticated"));
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserDoesnotExistsException("User not found"));
     }
-
 
     private void validateOwnerOrAdmin(Restaurant restaurant, User currentUser, String operation) {
         boolean isOwner = restaurant.getOwner().getId().equals(currentUser.getId());
@@ -158,6 +174,7 @@ public class RestaurantService {
                     "You are not authorized to " + operation + " this restaurant");
         }
     }
+
 
     private RestaurantResponse toResponse(Restaurant restaurant) {
         return RestaurantResponse.builder()

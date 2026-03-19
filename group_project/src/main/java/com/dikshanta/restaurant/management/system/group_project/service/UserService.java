@@ -6,7 +6,6 @@ import com.dikshanta.restaurant.management.system.group_project.dto.request.User
 import com.dikshanta.restaurant.management.system.group_project.dto.request.UserProfileUpdateRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.UserResponse;
 import com.dikshanta.restaurant.management.system.group_project.enums.Role;
-import com.dikshanta.restaurant.management.system.group_project.exceptions.OnlyCustomerException;
 import com.dikshanta.restaurant.management.system.group_project.exceptions.UserAlreadyExistsException;
 import com.dikshanta.restaurant.management.system.group_project.exceptions.UserDoesnotExistsException;
 import com.dikshanta.restaurant.management.system.group_project.mappers.request.RegisterRequestMapper;
@@ -34,12 +33,11 @@ public class UserService {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new UserAlreadyExistsException("User with this email already exists");
         }
-        if (registerRequest.getRole() == Role.ADMIN) {
-            throw new OnlyCustomerException("Sorry,you can only signup as customer");
-        }
+
         String encodedPassword = passwordEncoder.encode(registerRequest.getPassword());
         User user = registerRequestMapper.apply(registerRequest);
         user.setPassword(encodedPassword);
+        user.setRole(Role.CUSTOMER);
         user.setProfileImageUrl("uploads/user/dummy_profile.png");
         return userRepository.save(user);
 

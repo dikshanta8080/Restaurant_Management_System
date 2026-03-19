@@ -4,6 +4,7 @@ public enum FoodCategory {
     VEG,
     NONVEG,
     DRINKS,
-    FASTFOODS
+    FASTFOODS,
+    BEVERAGE
 
 }
