@@ -13,12 +13,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
 @Configuration
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
+    private final HandlerExceptionResolver handlerExceptionResolver;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
@@ -53,8 +55,8 @@ public class JwtFilter extends OncePerRequestFilter {
             System.out.println("AuthenticationServiceException caught: " + e.getMessage());
             authenticationEntryPoint.commence(request, response, e);
         } catch (Exception e) {
-            System.out.println("General Exception caught in filter: " + e.getMessage());
-            e.printStackTrace();
+             System.out.println("General Exception caught in filter: " + e.getMessage());
+             e.printStackTrace();
         }
     }
 }

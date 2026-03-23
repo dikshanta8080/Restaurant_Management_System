@@ -6,6 +6,7 @@ import com.dikshanta.restaurant.management.system.group_project.dto.request.User
 import com.dikshanta.restaurant.management.system.group_project.dto.request.UserProfileUpdateRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.UserResponse;
 import com.dikshanta.restaurant.management.system.group_project.enums.Role;
+import com.dikshanta.restaurant.management.system.group_project.exceptions.OnlyCustomerException;
 import com.dikshanta.restaurant.management.system.group_project.exceptions.UserAlreadyExistsException;
 import com.dikshanta.restaurant.management.system.group_project.exceptions.UserDoesnotExistsException;
 import com.dikshanta.restaurant.management.system.group_project.mappers.request.RegisterRequestMapper;
@@ -26,19 +27,19 @@ public class UserService {
     private final RegisterRequestMapper registerRequestMapper;
     private final SecurityAuditorAware securityAuditorAware;
     private final AddressRepository addressRepository;
-    private final FileUploadService fileUploadService;
 
     @Transactional
     public User registerUser(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new UserAlreadyExistsException("User with this email already exists");
         }
-
+        if (registerRequest.getRole() == Role.ADMIN) {
+            throw new OnlyCustomerException("Sorry,you can only signup as customer");
+        }
         String encodedPassword = passwordEncoder.encode(registerRequest.getPassword());
         User user = registerRequestMapper.apply(registerRequest);
         user.setPassword(encodedPassword);
-        user.setRole(Role.CUSTOMER);
-        user.setProfileImageUrl("uploads/user/dummy_profile.png");
+        user.setProfileImageUrl("This is dummy profile url");
         return userRepository.save(user);
 
     }
@@ -64,10 +65,8 @@ public class UserService {
         User user = getCurrentUser();
 
         user.setName(request.getName());
-        String imageUrl = null;
-        if (request.getMultipartFile() != null && !request.getMultipartFile().isEmpty()) {
-            imageUrl = fileUploadService.uploadFile(request.getMultipartFile(), "user");
-            user.setProfileImageUrl(imageUrl);
+        if (request.getProfileImageUrl() != null) {
+            user.setProfileImageUrl(request.getProfileImageUrl());
         }
 
         Address address = user.getAddress();
@@ -83,7 +82,6 @@ public class UserService {
             address = addressRepository.save(address);
         }
         user.setAddress(address);
-
 
         User updatedUser = userRepository.save(user);
         return mapToUserResponse(updatedUser);

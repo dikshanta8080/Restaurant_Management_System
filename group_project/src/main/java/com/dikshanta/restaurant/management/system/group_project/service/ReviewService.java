@@ -3,7 +3,6 @@ package com.dikshanta.restaurant.management.system.group_project.service;
 import com.dikshanta.restaurant.management.system.group_project.configurations.SecurityAuditorAware;
 import com.dikshanta.restaurant.management.system.group_project.dto.request.ReviewRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.ReviewResponse;
-import com.dikshanta.restaurant.management.system.group_project.enums.Role;
 import com.dikshanta.restaurant.management.system.group_project.exceptions.*;
 import com.dikshanta.restaurant.management.system.group_project.model.entities.FoodItem;
 import com.dikshanta.restaurant.management.system.group_project.model.entities.Restaurant;
@@ -47,13 +46,11 @@ public class ReviewService {
 
         if (request.getRestaurantId() != null) {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-                    .orElseThrow(() -> new RestaurantDoesNotExistsException(
-                            "Restaurant not found with id: " + request.getRestaurantId()));
+                    .orElseThrow(() -> new RestaurantDoesNotExistsException("Restaurant not found with id: " + request.getRestaurantId()));
             review.setRestaurant(restaurant);
         } else if (request.getFoodItemId() != null) {
             FoodItem foodItem = foodItemRepository.findById(request.getFoodItemId())
-                    .orElseThrow(() -> new FoodItemNotFoundException(
-                            "Food item not found with id: " + request.getFoodItemId()));
+                    .orElseThrow(() -> new FoodItemNotFoundException("Food item not found with id: " + request.getFoodItemId()));
             review.setFoodItem(foodItem);
         }
 
@@ -66,8 +63,7 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("Review not found with id: " + reviewId));
 
-        validateOwnerOnly(review);
-
+        validateReviewOwnership(review);
         if (request.getRating() != null) {
             if (request.getRating() < 1 || request.getRating() > 5) {
                 throw new InvalidReviewException("Rating must be between 1 and 5");
@@ -87,8 +83,7 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("Review not found with id: " + reviewId));
 
-        validateOwnerOrAdmin(review);
-
+        validateReviewOwnership(review);
         reviewRepository.delete(review);
     }
 
@@ -116,7 +111,6 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
-
     private User getCurrentUser() {
         Long userId = securityAuditorAware.getCurrentAuditor()
                 .orElseThrow(() -> new RuntimeException("User not authenticated"));
@@ -129,43 +123,17 @@ public class ReviewService {
             throw new InvalidReviewException("Rating must be between 1 and 5");
         }
         if (request.getRestaurantId() != null && request.getFoodItemId() != null) {
-            throw new InvalidReviewException(
-                    "Review cannot be for both restaurant and food item simultaneously");
+            throw new InvalidReviewException("Review cannot be for both restaurant and food item simultaneously");
         }
         if (request.getRestaurantId() == null && request.getFoodItemId() == null) {
-            throw new InvalidReviewException(
-                    "Review must be associated with either a restaurant or a food item");
+            throw new InvalidReviewException("Review must be associated with either a restaurant or a food item");
         }
     }
 
-    /**
-     * Passes only if the current user is the owner of the review.
-     * Used for UPDATE — admins should not silently edit a user's review text.
-     */
-    private void validateOwnerOnly(Review review) {
+    private void validateReviewOwnership(Review review) {
         User currentUser = getCurrentUser();
         if (!review.getUser().getId().equals(currentUser.getId())) {
-            throw new UnauthorizedReviewAccessException(
-                    "You are not authorized to modify this review");
-        }
-    }
-
-    /**
-     * Passes if the current user is the owner OR has the ADMIN role.
-     * Used for DELETE — admins can remove any review for moderation.
-     * <p>
-     * BUG FIXED: The original code had a single validateReviewOwnership() used for
-     * both update and delete, which made it impossible for admins to delete reviews
-     * they did not author.  Split into two separate validators so the rules are
-     * applied correctly per operation.
-     */
-    private void validateOwnerOrAdmin(Review review) {
-        User currentUser = getCurrentUser();
-        boolean isOwner = review.getUser().getId().equals(currentUser.getId());
-        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
-        if (!isOwner && !isAdmin) {
-            throw new UnauthorizedReviewAccessException(
-                    "You are not authorized to delete this review");
+            throw new UnauthorizedReviewAccessException("You are not authorized to modify this review");
         }
     }
 
