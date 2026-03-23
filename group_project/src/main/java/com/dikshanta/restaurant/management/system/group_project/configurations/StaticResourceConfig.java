@@ -10,8 +10,9 @@ public class StaticResourceConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-
+        // Use absolute path so images are served correctly regardless of the working directory
+        String uploadPath = "file:" + System.getProperty("user.dir").replace("\\", "/") + "/uploads/";
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:uploads/");
+                .addResourceLocations(uploadPath);
     }
 }

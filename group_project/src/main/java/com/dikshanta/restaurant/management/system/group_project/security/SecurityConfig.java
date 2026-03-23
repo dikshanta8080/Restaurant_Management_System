@@ -1,6 +1,5 @@
 package com.dikshanta.restaurant.management.system.group_project.security;
 
-
 import com.dikshanta.restaurant.management.system.group_project.handlers.CustomAccessDeniedHandler;
 import com.dikshanta.restaurant.management.system.group_project.handlers.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -25,19 +25,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-import static com.dikshanta.restaurant.management.system.group_project.enums.Permission.*;
 import static com.dikshanta.restaurant.management.system.group_project.enums.Role.*;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private static final String ADMIN_ROUTE = "/api/v1/admin/**";
-    private static final String RESTAURANT_ROUTE = "/api/v1/restaurant/**";
-    private static final String PUBLIC_ROUTE = "/api/v1/health/**";
-    private static final String AUTH_ROUTE = "/api/v1/auth/**";
-    private static final String CUSTOMER_ROUTE = "/api/v1/customer/**";
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtFilter jwtFilter;
     private final CustomAccessDeniedHandler accessDeniedHandler;
@@ -45,89 +40,72 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
                 .authorizeHttpRequests(req -> req
 
-                        // Auth routes
-                        .requestMatchers(AUTH_ROUTE).permitAll()
-
-                        // Swagger & public routes
+                        // ── Public (no auth required) ──────────────────────────────────────
+                        .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
-                                PUBLIC_ROUTE,
-                                AUTH_ROUTE
+                                "/api/v1/health/**"
                         ).permitAll()
 
-                        // ADMIN ROLE ACCESS
-                        .requestMatchers(ADMIN_ROUTE).hasRole(ADMIN.name())
-                        .requestMatchers(HttpMethod.GET, ADMIN_ROUTE).hasAuthority(ADMIN_READ.getPermissionName())
-                        .requestMatchers(HttpMethod.POST, ADMIN_ROUTE).hasAuthority(ADMIN_CREATE.getPermissionName())
-                        .requestMatchers(HttpMethod.PUT, ADMIN_ROUTE).hasAuthority(ADMIN_UPDATE.getPermissionName())
-                        .requestMatchers(HttpMethod.DELETE, ADMIN_ROUTE).hasAuthority(ADMIN_DELETE.getPermissionName())
+                        // Public browse: anyone can see the restaurant list and food menus
+                        .requestMatchers(HttpMethod.GET, "/api/v1/customer/allRestaurants").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/restaurant/restaurants/*/food-items").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/restaurant/food-items").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/restaurant/allCategoriws").permitAll()
+                        // Serve uploaded images without auth
+                        .requestMatchers("/uploads/**").permitAll()
 
-                        // CUSTOMER ACCESS
-                        .requestMatchers(CUSTOMER_ROUTE)
-                        .hasAnyRole(ADMIN.name(), RESTAURANT.name(), CUSTOMER.name())
-                        .requestMatchers(HttpMethod.GET, CUSTOMER_ROUTE)
-                        .hasAnyAuthority(
-                                ADMIN_READ.getPermissionName(),
-                                RESTAURANT_READ.getPermissionName(),
-                                CUSTOMER_READ.getPermissionName()
-                        )
-                        .requestMatchers(HttpMethod.POST, CUSTOMER_ROUTE)
-                        .hasAnyAuthority(
-                                ADMIN_CREATE.getPermissionName(),
-                                RESTAURANT_CREATE.getPermissionName(),
-                                CUSTOMER_CREATE.getPermissionName()
-                        )
-                        .requestMatchers(HttpMethod.PUT, CUSTOMER_ROUTE)
-                        .hasAnyAuthority(
-                                ADMIN_UPDATE.getPermissionName(),
-                                RESTAURANT_UPDATE.getPermissionName(),
-                                CUSTOMER_UPDATE.getPermissionName()
-                        )
-                        .requestMatchers(HttpMethod.DELETE, CUSTOMER_ROUTE)
-                        .hasAnyAuthority(
-                                ADMIN_DELETE.getPermissionName(),
-                                RESTAURANT_DELETE.getPermissionName(),
-                                CUSTOMER_DELETE.getPermissionName()
-                        )
+                        // ── Admin-only ────────────────────────────────────────────────────
+                        .requestMatchers("/api/v1/admin/**").hasRole(ADMIN.name())
 
-                        // RESTAURANT MANAGEMENT
-                        .requestMatchers(RESTAURANT_ROUTE)
-                        .hasAnyRole(ADMIN.name(), RESTAURANT.name(), CUSTOMER.name())
-                        .requestMatchers(HttpMethod.GET, RESTAURANT_ROUTE)
-                        .hasAnyAuthority(
-                                ADMIN_READ.getPermissionName(),
-                                RESTAURANT_READ.getPermissionName()
-                        )
-                        .requestMatchers(HttpMethod.POST, RESTAURANT_ROUTE)
-                        .hasAnyAuthority(
-                                ADMIN_CREATE.getPermissionName(),
-                                RESTAURANT_CREATE.getPermissionName()
-                        )
-                        .requestMatchers(HttpMethod.PUT, RESTAURANT_ROUTE)
-                        .hasAnyAuthority(
-                                ADMIN_UPDATE.getPermissionName(),
-                                RESTAURANT_UPDATE.getPermissionName()
-                        )
-                        .requestMatchers(HttpMethod.DELETE, RESTAURANT_ROUTE)
-                        .hasAnyAuthority(
-                                ADMIN_DELETE.getPermissionName(),
-                                RESTAURANT_DELETE.getPermissionName()
-                        )
+                        // ── Restaurant management (owner actions) ─────────────────────────
+                        .requestMatchers(HttpMethod.POST, "/api/v1/restaurant/restaurants/*/food-items").hasAnyRole(RESTAURANT.name(), ADMIN.name())
+                        .requestMatchers(HttpMethod.PUT,  "/api/v1/restaurant/food-items/*").hasAnyRole(RESTAURANT.name(), ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/restaurant/food-items/*").hasAnyRole(RESTAURANT.name(), ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/restaurant/getRestaurant").hasAnyRole(RESTAURANT.name(), ADMIN.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/restaurant/updateRestaurant/**").hasAnyRole(RESTAURANT.name(), ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/restaurant/deleteRestaurant/**").hasAnyRole(RESTAURANT.name(), ADMIN.name())
 
+                        // ── Restaurant order management ───────────────────────────────────
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/restaurant/orders/*/status").hasAnyRole(RESTAURANT.name(), ADMIN.name())
+
+                        // ── Customer routes (all authenticated users) ─────────────────────
+                        // Profile
+                        .requestMatchers(HttpMethod.GET, "/api/v1/customer/profile").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/customer/profileUpdate").authenticated()
+                        // Register a restaurant (any logged-in user can apply)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/customer/createRestaurant").authenticated()
+
+                        // ── Cart (customer + admin) ───────────────────────────────────────
+                        .requestMatchers("/api/v1/customer/cart/**").hasAnyRole(CUSTOMER.name(), ADMIN.name())
+                        .requestMatchers("/api/v1/customer/cart").hasAnyRole(CUSTOMER.name(), ADMIN.name())
+
+                        // ── Orders ────────────────────────────────────────────────────────
+                        .requestMatchers(HttpMethod.POST, "/api/v1/customer/orders").hasAnyRole(CUSTOMER.name(), ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/customer/orders/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/customer/orders").authenticated()
+
+                        // ── Reviews ───────────────────────────────────────────────────────
+                        // GET: anyone can read reviews
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
+                        // POST/PUT: CUSTOMER only — further enforced by @PreAuthorize in ReviewController
+                        .requestMatchers(HttpMethod.POST, "/api/reviews").hasRole(CUSTOMER.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/reviews/**").hasRole(CUSTOMER.name())
+                        // DELETE: review owner or admin (fine-grained check done in service)
+                        .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").authenticated()
+
+                        // ── Anything else requires authentication ─────────────────────────
                         .anyRequest().authenticated()
                 )
-
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -136,23 +114,26 @@ public class SecurityConfig {
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)
                 )
-
                 .build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:3000"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        // Allow both dev ports and any localhost port for flexibility
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "http://localhost:3000",
+                "http://127.0.0.1:*"
+        ));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-
         return source;
     }
 
@@ -172,6 +153,4 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
-
 }
-

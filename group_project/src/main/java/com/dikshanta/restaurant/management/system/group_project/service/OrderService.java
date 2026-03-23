@@ -71,7 +71,6 @@ public class OrderService {
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new RuntimeException("Order must contain at least one item");
         }
-
         Order order = new Order();
         order.setUser(user);
         order.setDeliveryAddress(address);
@@ -96,7 +95,6 @@ public class OrderService {
             total = total.add(foodItem.getPrice().multiply(new BigDecimal(itemReq.getQuantity())));
             order.addOrderItem(orderItem);
         }
-
         order.setTotalPrice(total);
         order = orderRepository.save(order);
 

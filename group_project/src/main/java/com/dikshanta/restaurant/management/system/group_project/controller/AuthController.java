@@ -19,10 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
 public class AuthController {
+
     private final AuthService authService;
-    
+
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<RegisterResponse>> createUser(@RequestBody @Valid RegisterRequest registerRequest) {
+    public ResponseEntity<ApiResponse<RegisterResponse>> createUser(
+            @RequestBody @Valid RegisterRequest registerRequest) {
         RegisterResponse response = authService.registerUser(registerRequest);
         ApiResponse<RegisterResponse> apiResponse = ApiResponse.<RegisterResponse>builder()
                 .httpStatus(HttpStatus.CREATED)
@@ -33,7 +35,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> authenticateUser(@RequestBody @Valid LoginRequest loginRequest) {
+    public ResponseEntity<ApiResponse<LoginResponse>> authenticateUser(
+            @RequestBody @Valid LoginRequest loginRequest) {
         LoginResponse loginResponse = authService.authenticateUser(loginRequest);
         ApiResponse<LoginResponse> apiResponse = ApiResponse.<LoginResponse>builder()
                 .httpStatus(HttpStatus.OK)
@@ -41,6 +44,5 @@ public class AuthController {
                 .responseObject(loginResponse)
                 .build();
         return new ResponseEntity<>(apiResponse, apiResponse.getHttpStatus());
-
     }
 }

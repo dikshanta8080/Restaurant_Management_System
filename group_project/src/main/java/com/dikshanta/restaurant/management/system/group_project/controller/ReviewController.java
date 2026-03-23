@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,24 +19,30 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
+    @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping
     public ResponseEntity<ReviewResponse> createReview(@Valid @RequestBody ReviewRequest request) {
         ReviewResponse response = reviewService.createReview(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('CUSTOMER')")
     @PutMapping("/{id}")
-    public ResponseEntity<ReviewResponse> updateReview(@PathVariable Long id, @Valid @RequestBody ReviewRequest request) {
+    public ResponseEntity<ReviewResponse> updateReview(
+            @PathVariable Long id,
+            @Valid @RequestBody ReviewRequest request) {
         ReviewResponse response = reviewService.updateReview(id, request);
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'RESTAURANT', 'ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
         reviewService.deleteReview(id);
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/restaurants/{restaurantId}")
     public ResponseEntity<List<ReviewResponse>> getReviewsForRestaurant(
             @PathVariable Long restaurantId,
@@ -45,6 +52,7 @@ public class ReviewController {
         return ResponseEntity.ok(responses);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/food-items/{foodItemId}")
     public ResponseEntity<List<ReviewResponse>> getReviewsForFoodItem(
             @PathVariable Long foodItemId,
@@ -54,6 +62,7 @@ public class ReviewController {
         return ResponseEntity.ok(responses);
     }
 
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'RESTAURANT', 'ADMIN')")
     @GetMapping("/users/{userId}")
     public ResponseEntity<List<ReviewResponse>> getUserReviews(
             @PathVariable Long userId,

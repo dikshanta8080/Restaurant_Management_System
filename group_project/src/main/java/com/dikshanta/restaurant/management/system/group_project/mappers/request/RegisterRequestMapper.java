@@ -13,7 +13,6 @@ public class RegisterRequestMapper implements Function<RegisterRequest, User> {
         return User.builder()
                 .name(registerRequest.getName())
                 .email(registerRequest.getEmail())
-                .role(registerRequest.getRole())
                 .build();
     }
 }

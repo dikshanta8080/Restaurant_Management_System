@@ -1,7 +1,10 @@
 package com.dikshanta.restaurant.management.system.group_project.controller;
 
 import com.dikshanta.restaurant.management.system.group_project.dto.request.FoodItemRequest;
+import com.dikshanta.restaurant.management.system.group_project.dto.response.CategoryResponse;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.FoodItemResponse;
+import com.dikshanta.restaurant.management.system.group_project.model.ApiResponse;
+import com.dikshanta.restaurant.management.system.group_project.service.CategoryService;
 import com.dikshanta.restaurant.management.system.group_project.service.FoodItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -9,7 +12,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,13 +23,14 @@ import java.util.List;
 @RequestMapping("/api/v1/restaurant")
 @RequiredArgsConstructor
 public class FoodItemController {
+    private final CategoryService categoryService;
 
     private final FoodItemService foodItemService;
 
-    @PostMapping("/restaurants/{restaurantId}/food-items")
+    @PostMapping(value = "/restaurants/{restaurantId}/food-items", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<FoodItemResponse> addFoodItem(
             @PathVariable Long restaurantId,
-            @RequestBody FoodItemRequest request) {
+            @ModelAttribute FoodItemRequest request) {
         FoodItemResponse response = foodItemService.addFoodItem(restaurantId, request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -52,7 +58,7 @@ public class FoodItemController {
 
     @GetMapping("/food-items")
     public ResponseEntity<Page<FoodItemResponse>> getAllFoodItems(
-            @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
+            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
             @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy,
             @RequestParam(value = "sortDir", defaultValue = "asc", required = false) String sortDir,
@@ -65,5 +71,19 @@ public class FoodItemController {
 
         Page<FoodItemResponse> responses = foodItemService.getAllFoodItems(categoryId, pageable);
         return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/allCategoriws")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'RESTAURANT', 'ADMIN')")
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAllCategories() {
+        List<CategoryResponse> allCategories = categoryService.getAllCategories();
+        ApiResponse<List<CategoryResponse>> apiResponse = ApiResponse.<List<CategoryResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Category fetched")
+                .responseObject(allCategories)
+                .build();
+        return new ResponseEntity<>(apiResponse, apiResponse.getHttpStatus());
+
+
     }
 }

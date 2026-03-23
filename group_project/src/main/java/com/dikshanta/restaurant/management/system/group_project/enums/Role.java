@@ -3,6 +3,7 @@ package com.dikshanta.restaurant.management.system.group_project.enums;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -15,34 +16,41 @@ public enum Role {
             CUSTOMER_CREATE,
             CUSTOMER_READ,
             CUSTOMER_UPDATE,
-            CUSTOMER_DELETE)),
+            CUSTOMER_DELETE
+    )),
 
     RESTAURANT(Set.of(
-            Permission.RESTAURANT_CREATE,
-            Permission.RESTAURANT_READ,
-            Permission.RESTAURANT_UPDATE,
-            Permission.RESTAURANT_DELETE
+            RESTAURANT_CREATE,
+            RESTAURANT_READ,
+            RESTAURANT_UPDATE,
+            RESTAURANT_DELETE
     )),
+
     ADMIN(Set.of(
             CUSTOMER_CREATE,
             CUSTOMER_READ,
             CUSTOMER_UPDATE,
-            Permission.CUSTOMER_DELETE,
-            Permission.RESTAURANT_CREATE,
-            Permission.RESTAURANT_READ,
-            Permission.RESTAURANT_UPDATE,
-            Permission.RESTAURANT_DELETE,
-            Permission.ADMIN_CREATE,
-            Permission.ADMIN_READ,
-            Permission.ADMIN_UPDATE,
-            Permission.ADMIN_DELETE
+            CUSTOMER_DELETE,
+            RESTAURANT_CREATE,
+            RESTAURANT_READ,
+            RESTAURANT_UPDATE,
+            RESTAURANT_DELETE,
+            ADMIN_CREATE,
+            ADMIN_READ,
+            ADMIN_UPDATE,
+            ADMIN_DELETE
     ));
     private final Set<Permission> permissions;
 
     public List<SimpleGrantedAuthority> getAuthorities() {
-        return permissions
-                .stream()
-                .map(permission -> new SimpleGrantedAuthority("ROLE_" + this.name())).toList();
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
+        permissions.forEach(permission ->
+                authorities.add(new SimpleGrantedAuthority(permission.getPermissionName()))
+        );
+
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
+
+        return authorities;
     }
 }
