@@ -3,7 +3,12 @@ export interface UserResponse {
   name: string;
   email: string;
   role: string;
-  profileImagePath?: string;
+  profileImageUrl?: string;
+  addressId?: number;
+  province?: string;
+  district?: string;
+  city?: string;
+  street?: string;
 }
 
 export interface UserProfileUpdateRequest {

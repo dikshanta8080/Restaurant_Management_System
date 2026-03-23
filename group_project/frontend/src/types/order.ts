@@ -8,6 +8,11 @@ export interface OrderItemRequest {
 export interface OrderCreateRequest {
   items: OrderItemRequest[];
   addressId?: number;
+  // Optional delivery address override (when user wants a different address).
+  province?: string;
+  district?: string;
+  city?: string;
+  street?: string;
 }
 
 export interface OrderItemResponse {
@@ -25,4 +30,10 @@ export interface OrderResponse {
   items: OrderItemResponse[];
   createdAt: string;
   userId: number;
+
+  deliveryAddressId?: number;
+  deliveryProvince?: string;
+  deliveryDistrict?: string;
+  deliveryCity?: string;
+  deliveryStreet?: string;
 }

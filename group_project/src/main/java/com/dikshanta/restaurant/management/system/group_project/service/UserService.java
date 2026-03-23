@@ -102,12 +102,14 @@ public class UserService {
     }
 
     private UserResponse mapToUserResponse(User user) {
+        Long addressId = user.getAddress() != null ? user.getAddress().getId() : null;
         return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole() != null ? user.getRole().name() : null)
                 .profileImageUrl(user.getProfileImageUrl())
+                .addressId(addressId)
                 .province(user.getAddress() != null ? user.getAddress().getProvince() : null)
                 .district(user.getAddress() != null ? user.getAddress().getDistrict() : null)
                 .city(user.getAddress() != null ? user.getAddress().getCity() : null)

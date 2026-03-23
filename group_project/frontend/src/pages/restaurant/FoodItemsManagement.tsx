@@ -7,6 +7,7 @@ import Modal from '../../components/Modal';
 import { SkeletonRow } from '../../components/Skeleton';
 import toast from 'react-hot-toast';
 import { FoodItemResponse } from '../../types/foodItem';
+import { getImageUrl } from '../../utils/imageUtils';
 
 interface FoodForm {
   name: string;
@@ -25,6 +26,7 @@ const FoodItemsManagement: React.FC = () => {
   const [editItem, setEditItem] = useState<FoodItemResponse | null>(null);
   const [form, setForm] = useState<FoodForm>(EMPTY_FORM);
   const [preview, setPreview] = useState<string | null>(null);
+  const [brokenImageIds, setBrokenImageIds] = useState<Record<number, boolean>>({});
 
   const { data: restaurant } = useQuery({
     queryKey: ['own-restaurant'],
@@ -110,7 +112,8 @@ const FoodItemsManagement: React.FC = () => {
       categoryId: item.categoryId.toString(),
       file: null,
     });
-    setPreview(item.imageUrl ? `/${item.imageUrl}` : null);
+    setPreview(getImageUrl(item.imageUrl));
+    setBrokenImageIds({});
     setShowModal(true);
   };
 
@@ -160,9 +163,21 @@ const FoodItemsManagement: React.FC = () => {
             {items.map(item => (
               <div key={item.id} className="flex items-center gap-4 p-4 hover:bg-gray-50/50 transition-colors">
                 <div className="w-14 h-14 rounded-xl bg-orange-50 flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {item.imageUrl ? (
-                    <img src={`/${item.imageUrl}`} alt={item.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  ) : <span className="text-2xl">🍛</span>}
+                  {(() => {
+                    const imgUrl = getImageUrl(item.imageUrl);
+                    const failed = !!brokenImageIds[item.id];
+                    if (imgUrl && !failed) {
+                      return (
+                        <img
+                          src={imgUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          onError={() => setBrokenImageIds(prev => ({ ...prev, [item.id]: true }))}
+                        />
+                      );
+                    }
+                    return <span className="text-2xl">🍛</span>;
+                  })()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

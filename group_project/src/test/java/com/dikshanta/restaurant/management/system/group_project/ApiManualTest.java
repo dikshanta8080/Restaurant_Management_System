@@ -25,7 +25,10 @@ public class ApiManualTest {
         registerRequest.setName("Java Test User");
         registerRequest.setEmail("java" + System.currentTimeMillis() + "@test.com");
         registerRequest.setPassword("password");
-        registerRequest.setRole(Role.RESTAURANT);
+        registerRequest.setProvince("Test Province");
+        registerRequest.setDistrict("Test District");
+        registerRequest.setCity("Test City");
+        registerRequest.setStreet("Test Street");
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

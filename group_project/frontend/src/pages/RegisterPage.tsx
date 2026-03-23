@@ -13,6 +13,10 @@ const schema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
+  province: z.string().min(2, 'Province is required'),
+  district: z.string().min(2, 'District is required'),
+  city: z.string().min(2, 'City is required'),
+  street: z.string().min(2, 'Street is required'),
 }).refine(d => d.password === d.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
@@ -25,8 +29,9 @@ const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = React.useState(false);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, setError, formState: { errors, isSubmitting, isValid } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    mode: 'onChange',
   });
 
   const onSubmit = async (data: FormData) => {
@@ -35,6 +40,10 @@ const RegisterPage: React.FC = () => {
         name: data.name,
         email: data.email,
         password: data.password,
+        province: data.province,
+        district: data.district,
+        city: data.city,
+        street: data.street,
       });
       // Auto login after register
       const loginRes = await authService.login({ email: data.email, password: data.password });
@@ -43,7 +52,18 @@ const RegisterPage: React.FC = () => {
       toast.success(`Welcome to FoodHub, ${user.name}!`);
       navigate('/');
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Registration failed. Please try again.');
+      const responseObject = err?.response?.data?.responseObject;
+      const errorMap = responseObject?.errorMap;
+
+      if (errorMap && typeof errorMap === 'object') {
+        Object.entries(errorMap).forEach(([field, message]) => {
+          setError(field as keyof FormData, { type: 'server', message: String(message) });
+        });
+        toast.error(responseObject?.exceptionMessage || 'Please fix the highlighted fields.');
+        return;
+      }
+
+      toast.error(responseObject?.exceptionMessage || err?.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -131,7 +151,34 @@ const RegisterPage: React.FC = () => {
               {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
             </div>
 
-            <button type="submit" disabled={isSubmitting} className="btn-primary w-full py-3 text-base">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="label">Province</label>
+                <input {...register('province')} type="text" placeholder="e.g. Ontario" className="input" />
+                {errors.province && <p className="text-red-500 text-xs mt-1">{errors.province.message}</p>}
+              </div>
+              <div>
+                <label className="label">District</label>
+                <input {...register('district')} type="text" placeholder="e.g. Waterloo" className="input" />
+                {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district.message}</p>}
+              </div>
+              <div>
+                <label className="label">City</label>
+                <input {...register('city')} type="text" placeholder="e.g. New York" className="input" />
+                {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
+              </div>
+              <div>
+                <label className="label">Street</label>
+                <input {...register('street')} type="text" placeholder="e.g. 221B Baker Street" className="input" />
+                {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street.message}</p>}
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting || !isValid}
+              className="btn-primary w-full py-3 text-base"
+            >
               {isSubmitting ? 'Creating account…' : 'Create Free Account'}
             </button>
 

@@ -20,8 +20,9 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = React.useState(false);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, setError, formState: { errors, isSubmitting, isValid } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    mode: 'onChange',
   });
 
   const onSubmit = async (data: FormData) => {
@@ -35,7 +36,18 @@ const LoginPage: React.FC = () => {
       else if (user.role === 'RESTAURANT') navigate('/restaurant/dashboard');
       else navigate('/');
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Login failed. Check your credentials.');
+      const responseObject = err?.response?.data?.responseObject;
+      const errorMap = responseObject?.errorMap;
+
+      if (errorMap && typeof errorMap === 'object') {
+        Object.entries(errorMap).forEach(([field, message]) => {
+          setError(field as keyof FormData, { type: 'server', message: String(message) });
+        });
+        toast.error(responseObject?.exceptionMessage || 'Please fix the highlighted fields.');
+        return;
+      }
+
+      toast.error(responseObject?.exceptionMessage || err?.response?.data?.message || 'Login failed. Check your credentials.');
     }
   };
 
@@ -116,7 +128,7 @@ const LoginPage: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isValid}
               className="btn-primary w-full py-3 text-base"
             >
               {isSubmitting ? 'Signing in…' : 'Sign In'}

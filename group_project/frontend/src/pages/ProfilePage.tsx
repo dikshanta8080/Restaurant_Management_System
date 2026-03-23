@@ -5,6 +5,7 @@ import { customerService } from '../services/customerService';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { SkeletonText } from '../components/Skeleton';
+import { getImageUrl } from '../utils/imageUtils';
 
 const ProfilePage: React.FC = () => {
   const { user: authUser } = useAuth();
@@ -39,8 +40,12 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const imageSrc = avatarPreview
-    || (profile?.profileImagePath ? `/${profile.profileImagePath}` : null);
+  const imageSrc = avatarPreview || getImageUrl(profile?.profileImageUrl);
+  const [avatarBroken, setAvatarBroken] = React.useState(false);
+
+  React.useEffect(() => {
+    setAvatarBroken(false);
+  }, [imageSrc]);
 
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
@@ -55,8 +60,13 @@ const ProfilePage: React.FC = () => {
               <div className="flex justify-center mb-8">
                 <div className="relative">
                   <div className="w-28 h-28 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center overflow-hidden shadow-lg">
-                    {imageSrc ? (
-                      <img src={imageSrc} alt="Avatar" className="w-full h-full object-cover" />
+                    {imageSrc && !avatarBroken ? (
+                      <img
+                        src={imageSrc}
+                        alt="Avatar"
+                        className="w-full h-full object-cover"
+                        onError={() => setAvatarBroken(true)}
+                      />
                     ) : (
                       <span className="text-white text-4xl font-black">{profile?.name?.charAt(0).toUpperCase()}</span>
                     )}

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,7 +19,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/customer/orders")
-    public ResponseEntity<OrderResponse> placeOrder(@RequestBody OrderCreateRequest request) {
+    public ResponseEntity<OrderResponse> placeOrder(@RequestBody @Valid OrderCreateRequest request) {
         return ResponseEntity.ok(orderService.placeOrder(request));
     }
 

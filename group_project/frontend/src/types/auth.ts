@@ -3,6 +3,10 @@ export interface RegisterRequest {
   name: string;
   email: string;
   password: string;
+  province: string;
+  district: string;
+  city: string;
+  street: string;
 }
 
 export interface LoginRequest {

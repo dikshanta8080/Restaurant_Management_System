@@ -65,6 +65,15 @@ const OrderDetailPage: React.FC = () => {
             </div>
           </div>
 
+            <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-5">
+              <div className="text-xs text-gray-500">Deliver to</div>
+              <div className="mt-1 text-sm text-gray-800">
+                {[order.deliveryStreet, order.deliveryCity, order.deliveryDistrict, order.deliveryProvince]
+                  .filter(Boolean)
+                  .join(', ') || '—'}
+              </div>
+            </div>
+
           {/* Progress tracker (only for non-rejected) */}
           {order.status !== 'REJECTED' && (
             <div className="mb-8">

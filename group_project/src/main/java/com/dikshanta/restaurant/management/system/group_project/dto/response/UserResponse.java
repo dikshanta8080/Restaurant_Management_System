@@ -15,6 +15,7 @@ public class UserResponse {
     private String email;
     private String role;
     private String profileImageUrl;
+    private Long addressId;
     private String province;
     private String district;
     private String city;

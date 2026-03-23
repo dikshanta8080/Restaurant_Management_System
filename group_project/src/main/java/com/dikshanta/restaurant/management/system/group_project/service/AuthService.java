@@ -27,8 +27,8 @@ public class AuthService {
 
     public RegisterResponse registerUser(RegisterRequest registerRequest) {
         User user = userService.registerUser(registerRequest);
-        String token = jwtService.getJwt(user);
         RegisterResponse response = responseMapper.apply(user);
+        String token = jwtService.getJwt(user);
         response.setToken(token);
         return response;
     }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShoppingCart, Plus, Minus } from 'lucide-react';
 import { FoodItemResponse } from '../types/foodItem';
 import { cartService } from '../services/cartService';
@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { getImageUrl } from '../utils/imageUtils';
 
 interface FoodItemCardProps {
   item: FoodItemResponse;
@@ -18,8 +19,12 @@ const FoodItemCard: React.FC<FoodItemCardProps> = ({ item, categoryName }) => {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
-  const imageUrl = item.imageUrl ? `/${item.imageUrl}` : null;
+  const imageUrl = getImageUrl(item.imageUrl);
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageUrl]);
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -43,12 +48,12 @@ const FoodItemCard: React.FC<FoodItemCardProps> = ({ item, categoryName }) => {
     <div className={`card overflow-hidden group transition-all duration-300 hover:-translate-y-0.5 ${!item.available ? 'opacity-60' : ''}`}>
       {/* Image */}
       <div className="relative h-44 bg-gradient-to-br from-orange-50 to-amber-50 overflow-hidden">
-        {imageUrl ? (
+        {imageUrl && !imageFailed ? (
           <img
             src={imageUrl}
             alt={item.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            onError={() => setImageFailed(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl">🍛</div>

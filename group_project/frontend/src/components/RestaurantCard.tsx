@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Star, ChevronRight } from 'lucide-react';
 import { RestaurantResponse } from '../types/restaurant';
@@ -16,6 +16,11 @@ const statusColors: Record<string, string> = {
 
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
   const imageUrl = getImageUrl(restaurant.imageUrl);
+  const [brokenImage, setBrokenImage] = useState(false);
+
+  useEffect(() => {
+    setBrokenImage(false);
+  }, [imageUrl]);
 
   return (
     <Link
@@ -24,12 +29,12 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
     >
       {/* Image */}
       <div className="relative h-48 bg-gradient-to-br from-orange-100 to-red-100 overflow-hidden">
-        {imageUrl ? (
+        {imageUrl && !brokenImage ? (
           <img
             src={imageUrl}
             alt={restaurant.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            onError={() => setBrokenImage(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

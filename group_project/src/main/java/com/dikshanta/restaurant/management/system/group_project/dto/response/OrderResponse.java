@@ -17,4 +17,11 @@ public class OrderResponse {
     private List<OrderItemResponse> items;
     private LocalDateTime createdAt;
     private Long userId;
+
+    // Delivery address snapshot (may be null if not provided).
+    private Long deliveryAddressId;
+    private String deliveryProvince;
+    private String deliveryDistrict;
+    private String deliveryCity;
+    private String deliveryStreet;
 }

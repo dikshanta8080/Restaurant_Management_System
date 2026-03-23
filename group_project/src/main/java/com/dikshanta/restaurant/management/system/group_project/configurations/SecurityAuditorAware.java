@@ -14,11 +14,11 @@ public class SecurityAuditorAware implements AuditorAware<Long> {
     @Override
     public Optional<Long> getCurrentAuditor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof UserPrincipal userPrincipal)) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return Optional.empty();
         }
-        if (authentication.getPrincipal() instanceof UserPrincipal userPrincipal1) {
-            return Optional.ofNullable(userPrincipal.getId());
+        if (authentication.getPrincipal() instanceof UserPrincipal principal) {
+            return Optional.ofNullable(principal.getId());
         }
         return Optional.empty();
     }

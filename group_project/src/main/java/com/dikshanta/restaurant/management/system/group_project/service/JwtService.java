@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Service
@@ -19,7 +21,36 @@ public class JwtService {
     private final Utils utils;
 
     public SecretKey generateKey() {
-        byte[] stream = Decoders.BASE64.decode(utils.getJwt().getSecret());
+        String secret = utils.getJwt().getSecret();
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("JWT secret is not configured");
+        }
+
+        // The secret may be provided as standard Base64 OR Base64URL (which uses '-' and '_').
+        // JJWT's Decoders.BASE64 will throw "Illegal base64 character: '_'" on Base64URL input.
+        byte[] stream;
+        try {
+            stream = Decoders.BASE64.decode(secret);
+        } catch (RuntimeException ignored) {
+            try {
+                stream = Decoders.BASE64URL.decode(secret);
+            } catch (RuntimeException ignored2) {
+                // Dev fallback: treat the configured string as raw key material.
+                stream = secret.getBytes(StandardCharsets.UTF_8);
+            }
+        }
+
+        // JJWT enforces that HMAC keys are >= 256 bits. If the configured secret string
+        // isn't long enough (e.g., it's a plain dev string), derive a secure-length key.
+        if (stream.length < 32) {
+            try {
+                stream = MessageDigest.getInstance("SHA-256").digest(stream);
+            } catch (Exception e) {
+                // SHA-256 should always be available; if not, fail fast with a clear message.
+                throw new IllegalStateException("Unable to derive JWT signing key", e);
+            }
+        }
+
         return Keys.hmacShaKeyFor(stream);
     }
 

@@ -1,8 +1,8 @@
 package com.dikshanta.restaurant.management.system.group_project.dto.request;
 
-import com.dikshanta.restaurant.management.system.group_project.validators.EmailValidator;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -11,9 +11,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class LoginRequest {
-    @EmailValidator
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email address")
+    @Size(max = 254, message = "Email is too long")
     private String email;
-    @NotEmpty(message = "Password can not be empty")
-    @NotNull(message = "Password can not be empty")
+
+    @NotBlank(message = "Password is required")
+    @Size(min = 1, max = 100, message = "Password length is invalid")
     private String password;
 }

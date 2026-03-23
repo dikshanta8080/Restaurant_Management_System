@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package } from 'lucide-react';
 import { cartService } from '../services/cartService';
 import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
+import { customerService } from '../services/customerService';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +14,13 @@ const CartPage: React.FC = () => {
   const { cartItems, setCartItems, removeItem, updateItem, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [useSavedAddress, setUseSavedAddress] = useState(true);
+  const [overrideAddress, setOverrideAddress] = useState({
+    province: '',
+    district: '',
+    city: '',
+    street: '',
+  });
 
   const { isLoading } = useQuery({
     queryKey: ['cart'],
@@ -22,6 +30,33 @@ const CartPage: React.FC = () => {
       return items;
     },
   });
+
+  const { data: profile } = useQuery({
+    queryKey: ['profile-for-order'],
+    queryFn: async () => {
+      const res = await customerService.getProfile();
+      return res.responseObject;
+    },
+    staleTime: 30000,
+    retry: 1,
+  });
+
+  useEffect(() => {
+    if (!profile) return;
+    setOverrideAddress({
+      province: profile.province ?? '',
+      district: profile.district ?? '',
+      city: profile.city ?? '',
+      street: profile.street ?? '',
+    });
+  }, [profile]);
+
+  const overrideValid = useSavedAddress
+    ? true
+    : !!overrideAddress.province.trim() &&
+      !!overrideAddress.district.trim() &&
+      !!overrideAddress.city.trim() &&
+      !!overrideAddress.street.trim();
 
   const removeMutation = useMutation({
     mutationFn: (id: number) => cartService.removeCartItem(id),
@@ -51,9 +86,27 @@ const CartPage: React.FC = () => {
   };
 
   const placeOrderMutation = useMutation({
-    mutationFn: () => orderService.placeOrder({
-      items: cartItems.map(i => ({ foodItemId: i.foodItemId, quantity: i.quantity })),
-    }),
+    mutationFn: () => {
+      const base = {
+        items: cartItems.map(i => ({ foodItemId: i.foodItemId, quantity: i.quantity })),
+      };
+
+      // Use saved address by default; allow override when user edits fields.
+      if (useSavedAddress) {
+        return orderService.placeOrder({
+          ...base,
+          addressId: profile?.addressId,
+        });
+      }
+
+      return orderService.placeOrder({
+        ...base,
+        province: overrideAddress.province.trim(),
+        district: overrideAddress.district.trim(),
+        city: overrideAddress.city.trim(),
+        street: overrideAddress.street.trim(),
+      });
+    },
     onSuccess: async (order) => {
       try {
         await paymentService.payNowDummy(order.id);
@@ -150,6 +203,74 @@ const CartPage: React.FC = () => {
             {/* Order Summary */}
             <div className="card p-6 h-fit sticky top-24">
               <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
+              <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900">Delivery Address</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {useSavedAddress
+                        ? 'Using your saved address'
+                        : 'Using the address below'}
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={useSavedAddress}
+                      onChange={(e) => setUseSavedAddress(e.target.checked)}
+                    />
+                    Use saved
+                  </label>
+                </div>
+
+                <div className="mt-3 text-sm text-gray-800">
+                  {profile && (
+                    <div className="space-y-1">
+                      <div>
+                        <span className="font-semibold">Saved:</span>{' '}
+                        {[profile.street, profile.city, profile.district, profile.province].filter(Boolean).join(', ') || '—'}
+                      </div>
+                      {!useSavedAddress && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                          <div>
+                            <label className="label">Province</label>
+                            <input
+                              value={overrideAddress.province}
+                              onChange={(e) => setOverrideAddress((p) => ({ ...p, province: e.target.value }))}
+                              className="input"
+                            />
+                          </div>
+                          <div>
+                            <label className="label">District</label>
+                            <input
+                              value={overrideAddress.district}
+                              onChange={(e) => setOverrideAddress((p) => ({ ...p, district: e.target.value }))}
+                              className="input"
+                            />
+                          </div>
+                          <div>
+                            <label className="label">City</label>
+                            <input
+                              value={overrideAddress.city}
+                              onChange={(e) => setOverrideAddress((p) => ({ ...p, city: e.target.value }))}
+                              className="input"
+                            />
+                          </div>
+                          <div>
+                            <label className="label">Street</label>
+                            <input
+                              value={overrideAddress.street}
+                              onChange={(e) => setOverrideAddress((p) => ({ ...p, street: e.target.value }))}
+                              className="input"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
@@ -166,11 +287,11 @@ const CartPage: React.FC = () => {
               </div>
               <button
                 onClick={() => placeOrderMutation.mutate()}
-                disabled={placeOrderMutation.isPending}
+                disabled={placeOrderMutation.isPending || !overrideValid}
                 className="btn-primary w-full mt-6 flex items-center justify-center gap-2 py-3"
               >
                 {placeOrderMutation.isPending ? 'Placing order…' : (
-                  <>Pay Now (Dummy) <ArrowRight size={16} /></>
+                  <>Pay Now <ArrowRight size={16} /></>
                 )}
               </button>
               <button onClick={() => navigate('/restaurants')} className="btn-secondary w-full mt-2 text-sm">

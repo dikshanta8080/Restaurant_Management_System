@@ -67,6 +67,15 @@ public class PaymentService {
         payment.setStatus(PaymentStatus.PAID);
         payment.setPaymentTimestamp(LocalDateTime.now());
         payment.setTransactionId("DUMMY-" + orderId + "-" + System.currentTimeMillis());
+
+        // Simulated payment completion: move the order forward.
+        // This makes the full flow (order -> pay -> completed) observable in UI.
+        order.setStatus(com.dikshanta.restaurant.management.system.group_project.enums.OrderStatus.COMPLETED);
+        if (order.getOrderItems() != null) {
+            order.getOrderItems().forEach(item -> item.setStatus(com.dikshanta.restaurant.management.system.group_project.enums.OrderStatus.COMPLETED));
+        }
+        orderRepository.save(order);
+
         return map(paymentRepository.save(payment));
     }
 

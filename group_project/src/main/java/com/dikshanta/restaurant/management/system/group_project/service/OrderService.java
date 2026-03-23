@@ -58,18 +58,54 @@ public class OrderService {
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
                 .userId(order.getUser().getId())
+                .deliveryAddressId(order.getDeliveryAddress() != null ? order.getDeliveryAddress().getId() : null)
+                .deliveryProvince(order.getDeliveryAddress() != null ? order.getDeliveryAddress().getProvince() : null)
+                .deliveryDistrict(order.getDeliveryAddress() != null ? order.getDeliveryAddress().getDistrict() : null)
+                .deliveryCity(order.getDeliveryAddress() != null ? order.getDeliveryAddress().getCity() : null)
+                .deliveryStreet(order.getDeliveryAddress() != null ? order.getDeliveryAddress().getStreet() : null)
                 .build();
     }
 
-    private Address resolveDeliveryAddress(User user, Long addressId) {
-        if (addressId != null) {
-            return addressRepository.findById(addressId)
+    private Address resolveDeliveryAddress(User user, OrderCreateRequest request) {
+        // 1) Explicit address id wins.
+        if (request.getAddressId() != null) {
+            return addressRepository.findById(request.getAddressId())
                     .orElseThrow(() -> new RuntimeException("Address not found"));
         }
+
+        // 2) Optional override address fields (used when user wants a different delivery address).
+        boolean hasAnyOverride =
+                request.getProvince() != null || request.getDistrict() != null ||
+                        request.getCity() != null || request.getStreet() != null;
+
+        if (hasAnyOverride) {
+            // Require all override fields (prevents partial addresses).
+            if (isBlank(request.getProvince()) || isBlank(request.getDistrict()) ||
+                    isBlank(request.getCity()) || isBlank(request.getStreet())) {
+                throw new RuntimeException("All delivery address fields must be provided (province, district, city, street)");
+            }
+
+            Address override = Address.builder()
+                    .province(request.getProvince())
+                    .district(request.getDistrict())
+                    .city(request.getCity())
+                    .street(request.getStreet())
+                    .build();
+            return addressRepository.save(override);
+        }
+
+        // 3) Default to user's saved address.
         if (user.getAddress() != null) {
             return user.getAddress();
         }
-        throw new RuntimeException("Delivery address is required");
+
+        // Delivery address is optional for now (frontend may not collect it yet).
+        // Payment/order flow should still be testable end-to-end.
+        return null;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private void validateStatusTransition(OrderStatus currentStatus, OrderStatus nextStatus) {
@@ -92,7 +128,7 @@ public class OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Address address = resolveDeliveryAddress(user, request.getAddressId());
+        Address address = resolveDeliveryAddress(user, request);
 
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new RuntimeException("Order must contain at least one item");

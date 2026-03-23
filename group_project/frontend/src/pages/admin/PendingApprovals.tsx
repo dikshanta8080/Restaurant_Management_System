@@ -8,6 +8,7 @@ import { getImageUrl } from '../../utils/imageUtils';
 
 const PendingApprovals: React.FC = () => {
   const queryClient = useQueryClient();
+  const [brokenImageIds, setBrokenImageIds] = useState<Record<number, boolean>>({});
 
   const { data: pending, isLoading } = useQuery({
     queryKey: ['admin-pending'],
@@ -57,11 +58,21 @@ const PendingApprovals: React.FC = () => {
               <div key={r.id} className="card p-5">
                 {/* Image */}
                 <div className="h-36 bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl overflow-hidden mb-4 flex items-center justify-center">
-                  {r.imageUrl ? (
-                    <img src={getImageUrl(r.imageUrl) ?? ''} alt={r.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  ) : (
-                    <span className="text-4xl">🍽️</span>
-                  )}
+                  {(() => {
+                    const imgUrl = getImageUrl(r.imageUrl);
+                    const failed = !!brokenImageIds[r.id];
+                    if (imgUrl && !failed) {
+                      return (
+                        <img
+                          src={imgUrl}
+                          alt={r.name}
+                          className="w-full h-full object-cover"
+                          onError={() => setBrokenImageIds(prev => ({ ...prev, [r.id]: true }))}
+                        />
+                      );
+                    }
+                    return <span className="text-4xl">🍽️</span>;
+                  })()}
                 </div>
                 <div className="mb-4">
                   <div className="flex items-start justify-between">

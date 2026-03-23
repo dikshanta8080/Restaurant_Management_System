@@ -74,6 +74,9 @@ const OrdersPage: React.FC = () => {
                         {order.items?.length ?? 0} item{(order.items?.length ?? 0) !== 1 ? 's' : ''} •{' '}
                         {order.createdAt ? new Date(order.createdAt).toLocaleString() : ''}
                       </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Deliver to: {[order.deliveryStreet, order.deliveryCity].filter(Boolean).join(', ') || '—'}
+                      </p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-bold text-orange-600">Rs. {Number(order.totalPrice).toFixed(2)}</span>

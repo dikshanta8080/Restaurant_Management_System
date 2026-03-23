@@ -4,10 +4,12 @@ import { Store, Trash2, Search, CheckCircle, XCircle, Clock } from 'lucide-react
 import { adminService } from '../../services/adminService';
 import { SkeletonRow } from '../../components/Skeleton';
 import toast from 'react-hot-toast';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const AllRestaurantsAdmin: React.FC = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [brokenImageIds, setBrokenImageIds] = useState<Record<number, boolean>>({});
 
   const { data: restaurants, isLoading } = useQuery({
     queryKey: ['admin-restaurants'],
@@ -71,9 +73,21 @@ const AllRestaurantsAdmin: React.FC = () => {
             {filtered.map(r => (
               <div key={r.id} className="flex items-center gap-4 p-4 hover:bg-gray-50/50 transition-colors">
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
-                  {r.imageUrl ? (
-                    <img src={`/${r.imageUrl}`} alt={r.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  ) : <Store size={20} className="text-orange-400" />}
+                  {(() => {
+                    const imgUrl = getImageUrl(r.imageUrl);
+                    const failed = !!brokenImageIds[r.id];
+                    if (imgUrl && !failed) {
+                      return (
+                        <img
+                          src={imgUrl}
+                          alt={r.name}
+                          className="w-full h-full object-cover"
+                          onError={() => setBrokenImageIds(prev => ({ ...prev, [r.id]: true }))}
+                        />
+                      );
+                    }
+                    return <Store size={20} className="text-orange-400" />;
+                  })()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
