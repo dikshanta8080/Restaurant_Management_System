@@ -71,8 +71,12 @@ public class CustomerController {
     }
 
     @GetMapping("/allRestaurants")
-    public ResponseEntity<ApiResponse<List<RestaurantResponse>>> getAllRestaurants() {
-        List<RestaurantResponse> restaurants = restaurantService.getRestaurants();
+    public ResponseEntity<ApiResponse<List<RestaurantResponse>>> getAllRestaurants(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        List<RestaurantResponse> restaurants = restaurantService.getRestaurants(search, minRating, sortBy, sortDir);
         ApiResponse<List<RestaurantResponse>> apiResponse = ApiResponse.<List<RestaurantResponse>>builder()
                 .httpStatus(HttpStatus.OK)
                 .message("Parsed the restaurants")

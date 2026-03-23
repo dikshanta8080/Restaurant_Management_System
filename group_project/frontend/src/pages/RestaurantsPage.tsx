@@ -1,26 +1,30 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Store, SlidersHorizontal } from 'lucide-react';
+import { Search, Store, Star } from 'lucide-react';
 import { customerService } from '../services/customerService';
 import RestaurantCard from '../components/RestaurantCard';
 import { SkeletonCard } from '../components/Skeleton';
 
 const RestaurantsPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  const [minRating, setMinRating] = useState<number>(0);
+  const [sortBy, setSortBy] = useState<'name' | 'rating'>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['restaurants'],
+    queryKey: ['restaurants', search, minRating, sortBy, sortDir],
     queryFn: async () => {
-      const res = await customerService.getAllRestaurants();
-      return res.responseObject.filter(r => r.status === 'APPROVED');
+      const res = await customerService.getAllRestaurants({
+        search: search || undefined,
+        minRating: minRating > 0 ? minRating : undefined,
+        sortBy,
+        sortDir,
+      });
+      return res.responseObject;
     },
   });
 
-  const filtered = data?.filter(r =>
-    (r.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
-    r.description?.toLowerCase().includes(search.toLowerCase()) ||
-    r.ownerName?.toLowerCase().includes(search.toLowerCase())
-  ) ?? [];
+  const filtered = data ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
@@ -39,6 +43,23 @@ const RestaurantsPage: React.FC = () => {
                 placeholder="Search restaurants…"
                 className="input pl-11"
               />
+            </div>
+            <div className="flex items-center gap-2">
+              <Star size={16} className="text-yellow-500" />
+              <select value={minRating} onChange={e => setMinRating(Number(e.target.value))} className="input text-sm min-w-[140px]">
+                <option value={0}>All ratings</option>
+                <option value={4}>4.0+ rating</option>
+                <option value={3}>3.0+ rating</option>
+                <option value={2}>2.0+ rating</option>
+              </select>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value as 'name' | 'rating')} className="input text-sm min-w-[140px]">
+                <option value="name">Sort by name</option>
+                <option value="rating">Sort by rating</option>
+              </select>
+              <select value={sortDir} onChange={e => setSortDir(e.target.value as 'asc' | 'desc')} className="input text-sm min-w-[120px]">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
             </div>
           </div>
         </div>

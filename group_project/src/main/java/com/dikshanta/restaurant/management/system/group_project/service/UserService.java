@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -44,7 +46,17 @@ public class UserService {
     }
 
     public void deleteUser(UserDeleteRequest userDeleteRequest) {
+        if (!userRepository.existsById(userDeleteRequest.getId())) {
+            throw new UserDoesnotExistsException("User does not exist");
+        }
         userRepository.deleteById(userDeleteRequest.getId());
+    }
+
+    public List<UserResponse> getCustomers() {
+        return userRepository.findAllByRole(Role.CUSTOMER)
+                .stream()
+                .map(this::mapToUserResponse)
+                .toList();
     }
 
     private User getCurrentUser() {

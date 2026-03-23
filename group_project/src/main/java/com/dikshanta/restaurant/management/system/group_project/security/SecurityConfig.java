@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req -> req
 
                         // ── Public (no auth required) ──────────────────────────────────────
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -93,6 +93,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/customer/orders").hasAnyRole(CUSTOMER.name(), ADMIN.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/customer/orders/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/customer/orders").authenticated()
+                        .requestMatchers("/api/v1/customer/payments/**").hasAnyRole(CUSTOMER.name(), ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/restaurant/payments").hasAnyRole(RESTAURANT.name(), ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/admin/payments").hasRole(ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/restaurant/orders").hasAnyRole(RESTAURANT.name(), ADMIN.name())
 
                         // ── Reviews ───────────────────────────────────────────────────────
                         // GET: anyone can read reviews

@@ -25,16 +25,13 @@ public class AdminLoader implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         Utils.Admin adminData = utils.getAdmin();
-        if (!userRepository.existsByEmail(adminData.getEmail())) {
-            User admin = User.builder()
-                    .name(adminData.getName())
-                    .email(adminData.getEmail())
-                    .role(Role.ADMIN)
-                    .profileImageUrl(adminData.getProfileImagePath())
-                    .password(passwordEncoder.encode(adminData.getPassword()))
-                    .build();
-            userRepository.save(admin);
-        }
+        User admin = userRepository.findByEmail(adminData.getEmail())
+                .orElse(User.builder().email(adminData.getEmail()).build());
+        admin.setName(adminData.getName());
+        admin.setRole(Role.ADMIN);
+        admin.setProfileImageUrl(adminData.getProfileImagePath());
+        admin.setPassword(passwordEncoder.encode(adminData.getPassword()));
+        userRepository.save(admin);
         List<Category> categories = categoryRepository.findAll();
 
         if (categories.isEmpty()) {

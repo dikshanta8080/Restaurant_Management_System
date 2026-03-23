@@ -18,6 +18,8 @@ import OrdersPage from './pages/OrdersPage';
 import OrderDetailPage from './pages/OrderDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterRestaurantPage from './pages/RegisterRestaurantPage';
+import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
+import CheckoutCancelPage from './pages/CheckoutCancelPage';
 
 // Restaurant pages
 import RestaurantDashboard from './pages/restaurant/RestaurantDashboard';
@@ -29,6 +31,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import PendingApprovals from './pages/admin/PendingApprovals';
 import AllRestaurantsAdmin from './pages/admin/AllRestaurantsAdmin';
 import AllCustomersAdmin from './pages/admin/AllCustomersAdmin';
+import AllPaymentsAdmin from './pages/admin/AllPaymentsAdmin';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,6 +71,16 @@ function App() {
               <Route path="/restaurants" element={<WithNavbar><RestaurantsPage /></WithNavbar>} />
               <Route path="/restaurants/:id" element={<WithNavbar><RestaurantDetailPage /></WithNavbar>} />
               <Route path="/register-restaurant" element={<WithNavbar><RegisterRestaurantPage /></WithNavbar>} />
+              <Route path="/payment/success" element={
+                <ProtectedRoute roles={['CUSTOMER']}>
+                  <WithNavbar><CheckoutSuccessPage /></WithNavbar>
+                </ProtectedRoute>
+              } />
+              <Route path="/payment/cancel" element={
+                <ProtectedRoute roles={['CUSTOMER']}>
+                  <WithNavbar><CheckoutCancelPage /></WithNavbar>
+                </ProtectedRoute>
+              } />
 
               {/* Customer protected routes */}
               <Route path="/cart" element={
@@ -127,6 +140,11 @@ function App() {
               <Route path="/admin/customers" element={
                 <ProtectedRoute roles={['ADMIN']}>
                   <WithNavbar><AllCustomersAdmin /></WithNavbar>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/payments" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <WithNavbar><AllPaymentsAdmin /></WithNavbar>
                 </ProtectedRoute>
               } />
 

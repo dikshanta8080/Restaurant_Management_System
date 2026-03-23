@@ -1,12 +1,12 @@
 package com.dikshanta.restaurant.management.system.group_project.model.entities;
 
-import com.dikshanta.restaurant.management.system.group_project.enums.PaymentMethod;
 import com.dikshanta.restaurant.management.system.group_project.enums.PaymentStatus;
 import com.dikshanta.restaurant.management.system.group_project.model.DateAuditable;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -24,14 +24,16 @@ public class Payment extends DateAuditable {
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    private PaymentMethod method; // enum, no empty check
-
-    @Enumerated(EnumType.STRING)
-    private PaymentStatus status = PaymentStatus.PENDING; // default value
+    private PaymentStatus status = PaymentStatus.PENDING;
 
     private String transactionId;
+    private LocalDateTime paymentTimestamp;
 
     @OneToOne
     @JoinColumn(name = "order_id", unique = true)
     private Order order;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

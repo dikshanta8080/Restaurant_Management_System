@@ -27,6 +27,11 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getUserOrders(pageable));
     }
 
+    @GetMapping("/restaurant/orders")
+    public ResponseEntity<Page<OrderResponse>> getRestaurantIncomingOrders(Pageable pageable) {
+        return ResponseEntity.ok(orderService.getOwnerIncomingOrders(pageable));
+    }
+
     @GetMapping("/customer/orders/{id}")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.getOrderById(id));

@@ -13,15 +13,18 @@ import com.dikshanta.restaurant.management.system.group_project.exceptions.Unaut
 import com.dikshanta.restaurant.management.system.group_project.exceptions.UserDoesnotExistsException;
 import com.dikshanta.restaurant.management.system.group_project.model.entities.Address;
 import com.dikshanta.restaurant.management.system.group_project.model.entities.Restaurant;
+import com.dikshanta.restaurant.management.system.group_project.model.entities.Review;
 import com.dikshanta.restaurant.management.system.group_project.model.entities.User;
 import com.dikshanta.restaurant.management.system.group_project.repository.AddressRepository;
 import com.dikshanta.restaurant.management.system.group_project.repository.RestaurantRepository;
+import com.dikshanta.restaurant.management.system.group_project.repository.ReviewRepository;
 import com.dikshanta.restaurant.management.system.group_project.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class RestaurantService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final FileUploadService fileUploadService;
+    private final ReviewRepository reviewRepository;
 
 
     @Transactional
@@ -113,11 +117,40 @@ public class RestaurantService {
     }
 
 
-    public List<RestaurantResponse> getRestaurants() {
-        return restaurantRepository.findAllByStatus(RestaurantStatus.APPROVED)
+    public List<RestaurantResponse> getRestaurants(String search, Double minRating, String sortBy, String sortDir) {
+        List<RestaurantResponse> responses = restaurantRepository.findAllByStatus(RestaurantStatus.APPROVED)
                 .stream()
                 .map(this::toResponse)
                 .toList();
+
+        if (search != null && !search.isBlank()) {
+            String normalized = search.toLowerCase(Locale.ROOT);
+            responses = responses.stream()
+                    .filter(r -> (r.getName() != null && r.getName().toLowerCase(Locale.ROOT).contains(normalized))
+                            || (r.getDescription() != null && r.getDescription().toLowerCase(Locale.ROOT).contains(normalized))
+                            || (r.getOwnerName() != null && r.getOwnerName().toLowerCase(Locale.ROOT).contains(normalized)))
+                    .toList();
+        }
+
+        if (minRating != null) {
+            responses = responses.stream()
+                    .filter(r -> r.getAverageRating() != null && r.getAverageRating() >= minRating)
+                    .toList();
+        }
+
+        String field = (sortBy == null || sortBy.isBlank()) ? "name" : sortBy.toLowerCase(Locale.ROOT);
+        boolean desc = "desc".equalsIgnoreCase(sortDir);
+        responses = responses.stream().sorted((a, b) -> {
+            int result;
+            if ("rating".equals(field)) {
+                result = Double.compare(a.getAverageRating() == null ? 0.0 : a.getAverageRating(),
+                        b.getAverageRating() == null ? 0.0 : b.getAverageRating());
+            } else {
+                result = String.valueOf(a.getName()).compareToIgnoreCase(String.valueOf(b.getName()));
+            }
+            return desc ? -result : result;
+        }).toList();
+        return responses;
     }
 
     // ── Owner's own restaurant ───────────────────────────────────────────────
@@ -194,13 +227,19 @@ public class RestaurantService {
 
 
     private RestaurantResponse toResponse(Restaurant restaurant) {
+        List<Review> reviews = reviewRepository.findByRestaurantId(restaurant.getId());
+        double average = reviews.isEmpty()
+                ? 0.0
+                : reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
         return RestaurantResponse.builder()
                 .id(restaurant.getId())
                 .name(restaurant.getName())
                 .description(restaurant.getDescription())
                 .imageUrl(restaurant.getImageUrl())
                 .ownerName(restaurant.getOwner().getName())
-                .status(restaurant.getStatus())   // ← was missing
+                .status(restaurant.getStatus())
+                .averageRating(Math.round(average * 10.0) / 10.0)
+                .reviewCount(reviews.size())
                 .build();
     }
 

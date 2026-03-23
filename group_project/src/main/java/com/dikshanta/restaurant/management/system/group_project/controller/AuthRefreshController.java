@@ -40,7 +40,9 @@ public class AuthRefreshController {
     @GetMapping("/refresh")
     public ResponseEntity<ApiResponse<LoginResponse>> refreshToken() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+            throw new UserDoesnotExistsException("User not authenticated");
+        }
 
         User user = userRepository.findById(principal.getId())
                 .orElseThrow(() -> new UserDoesnotExistsException("User not found"));

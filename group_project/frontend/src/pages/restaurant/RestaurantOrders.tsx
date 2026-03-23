@@ -8,14 +8,13 @@ import toast from 'react-hot-toast';
 
 const statusConfig: Record<OrderStatus, { label: string; cls: string; icon: React.ReactNode }> = {
   PENDING: { label: 'Pending', cls: 'badge-pending', icon: <Clock size={12} /> },
-  CONFIRMED: { label: 'Confirmed', cls: 'badge-confirmed', icon: <Loader2 size={12} className="animate-spin" /> },
-  DELIVERED: { label: 'Delivered', cls: 'badge-delivered', icon: <CheckCircle size={12} /> },
-  CANCELLED: { label: 'Cancelled', cls: 'badge-cancelled', icon: <XCircle size={12} /> },
+  ACCEPTED: { label: 'Accepted', cls: 'badge-confirmed', icon: <Loader2 size={12} className="animate-spin" /> },
+  COMPLETED: { label: 'Completed', cls: 'badge-delivered', icon: <CheckCircle size={12} /> },
+  REJECTED: { label: 'Rejected', cls: 'badge-cancelled', icon: <XCircle size={12} /> },
 };
 
 const nextStatus: Partial<Record<OrderStatus, OrderStatus>> = {
-  PENDING: 'CONFIRMED',
-  CONFIRMED: 'DELIVERED',
+  ACCEPTED: 'COMPLETED',
 };
 
 const RestaurantOrders: React.FC = () => {
@@ -25,7 +24,7 @@ const RestaurantOrders: React.FC = () => {
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ['restaurant-orders-manage'],
     queryFn: async () => {
-      const res = await orderService.getUserOrders(0, 100);
+      const res = await orderService.getRestaurantIncomingOrders(0, 100);
       return res.content ?? [];
     },
     refetchInterval: 15000,
@@ -42,8 +41,8 @@ const RestaurantOrders: React.FC = () => {
     onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to update status'),
   });
 
-  const allStatuses = ['ALL', 'PENDING', 'CONFIRMED', 'DELIVERED', 'CANCELLED'];
-  const filtered = ordersData?.filter(o => statusFilter === 'ALL' || o.status === statusFilter) ?? [];
+  const allStatuses = ['ALL', 'PENDING', 'ACCEPTED', 'COMPLETED', 'REJECTED'];
+  const filtered = ordersData?.filter((o: OrderResponse) => statusFilter === 'ALL' || o.status === statusFilter) ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
@@ -61,7 +60,9 @@ const RestaurantOrders: React.FC = () => {
         {/* Status filter tabs */}
         <div className="flex gap-2 flex-wrap mb-6">
           {allStatuses.map(s => {
-            const count = s === 'ALL' ? (ordersData?.length ?? 0) : (ordersData?.filter(o => o.status === s).length ?? 0);
+            const count = s === 'ALL'
+              ? (ordersData?.length ?? 0)
+              : (ordersData?.filter((o: OrderResponse) => o.status === s).length ?? 0);
             return (
               <button
                 key={s}
@@ -123,13 +124,31 @@ const RestaurantOrders: React.FC = () => {
                   </div>
 
                   {/* Action */}
-                  {next && (
+                  {order.status === 'PENDING' && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => updateMutation.mutate({ id: order.id, status: 'ACCEPTED' })}
+                        disabled={updateMutation.isPending}
+                        className="btn-primary flex-1 text-sm py-2"
+                      >
+                        Accept Order
+                      </button>
+                      <button
+                        onClick={() => updateMutation.mutate({ id: order.id, status: 'REJECTED' })}
+                        disabled={updateMutation.isPending}
+                        className="btn-danger flex-1 text-sm py-2"
+                      >
+                        Reject Order
+                      </button>
+                    </div>
+                  )}
+                  {order.status === 'ACCEPTED' && next && (
                     <button
                       onClick={() => updateMutation.mutate({ id: order.id, status: next })}
                       disabled={updateMutation.isPending}
                       className="btn-primary w-full text-sm py-2"
                     >
-                      Mark as {next.charAt(0) + next.slice(1).toLowerCase()}
+                      Mark as Completed
                     </button>
                   )}
                 </div>

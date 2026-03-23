@@ -3,6 +3,7 @@ package com.dikshanta.restaurant.management.system.group_project.service;
 import com.dikshanta.restaurant.management.system.group_project.configurations.SecurityAuditorAware;
 import com.dikshanta.restaurant.management.system.group_project.dto.request.FoodItemRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.FoodItemResponse;
+import com.dikshanta.restaurant.management.system.group_project.enums.Role;
 import com.dikshanta.restaurant.management.system.group_project.exceptions.FoodItemNotFoundException;
 import com.dikshanta.restaurant.management.system.group_project.exceptions.RestaurantDoesNotExistsException;
 import com.dikshanta.restaurant.management.system.group_project.model.entities.Category;
@@ -11,12 +12,14 @@ import com.dikshanta.restaurant.management.system.group_project.model.entities.R
 import com.dikshanta.restaurant.management.system.group_project.repository.CategoryRepository;
 import com.dikshanta.restaurant.management.system.group_project.repository.FoodItemRepository;
 import com.dikshanta.restaurant.management.system.group_project.repository.RestaurantRepository;
+import com.dikshanta.restaurant.management.system.group_project.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +32,7 @@ public class FoodItemService {
     private final RestaurantRepository restaurantRepository;
     private final CategoryRepository categoryRepository;
     private final SecurityAuditorAware securityAuditorAware;
+    private final UserRepository userRepository;
 
     private FoodItemResponse mapToResponse(FoodItem foodItem) {
         return FoodItemResponse.builder()
@@ -45,7 +49,11 @@ public class FoodItemService {
 
     private void validateRestaurantOwner(Restaurant restaurant) {
         Long ownerId = securityAuditorAware.getCurrentAuditor().orElseThrow(() -> new RuntimeException("User not authenticated"));
-        if (!restaurant.getOwner().getId().equals(ownerId)) {
+        boolean isOwner = restaurant.getOwner().getId().equals(ownerId);
+        boolean isAdmin = userRepository.findById(ownerId)
+                .map(user -> user.getRole() == Role.ADMIN)
+                .orElse(false);
+        if (!isOwner && !isAdmin) {
             throw new RuntimeException("You are not authorized to perform this action for this restaurant");
         }
     }
@@ -116,13 +124,8 @@ public class FoodItemService {
         return foodItems.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
-    public Page<FoodItemResponse> getAllFoodItems(Long categoryId, Pageable pageable) {
-        Page<FoodItem> foodItemPage;
-        if (categoryId != null) {
-            foodItemPage = foodItemRepository.findByCategoryId(categoryId, pageable);
-        } else {
-            foodItemPage = foodItemRepository.findAll(pageable);
-        }
+    public Page<FoodItemResponse> getAllFoodItems(Long categoryId, String search, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+        Page<FoodItem> foodItemPage = foodItemRepository.findByFilters(categoryId, search, minPrice, maxPrice, pageable);
         return foodItemPage.map(this::mapToResponse);
     }
 }

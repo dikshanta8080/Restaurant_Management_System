@@ -7,6 +7,8 @@ export interface RestaurantResponse {
   imageUrl?: string;
   ownerName: string;
   status: RestaurantStatus;
+  averageRating?: number;
+  reviewCount?: number;
 }
 
 export interface RestaurantCreateRequest {

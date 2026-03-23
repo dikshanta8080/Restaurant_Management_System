@@ -11,7 +11,7 @@ export const customerService = {
   // PUT /api/v1/customer/profileUpdate (multipart)
   updateProfile: (request: UserProfileUpdateRequest): Promise<ApiResponse<UserResponse>> => {
     const form = new FormData();
-    form.append('name', request.name);
+    if (request.name) form.append('name', request.name);
     if (request.multipartFile) form.append('multipartFile', request.multipartFile);
     return api.put('/api/v1/customer/profileUpdate', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -19,8 +19,8 @@ export const customerService = {
   },
 
   // GET /api/v1/customer/allRestaurants
-  getAllRestaurants: (): Promise<ApiResponse<RestaurantResponse[]>> =>
-    api.get('/api/v1/customer/allRestaurants').then(r => r.data),
+  getAllRestaurants: (params?: { search?: string; minRating?: number; sortBy?: string; sortDir?: 'asc' | 'desc' }): Promise<ApiResponse<RestaurantResponse[]>> =>
+    api.get('/api/v1/customer/allRestaurants', { params }).then(r => r.data),
 
   // POST /api/v1/customer/createRestaurant (multipart)
   createRestaurant: (request: RestaurantCreateRequest & { multipartFile?: File }): Promise<ApiResponse<any>> => {

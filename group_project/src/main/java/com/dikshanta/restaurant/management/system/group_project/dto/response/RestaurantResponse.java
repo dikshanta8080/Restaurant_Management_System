@@ -17,4 +17,6 @@ public class RestaurantResponse {
     private String imageUrl;
     private String ownerName;
     private RestaurantStatus status;
+    private Double averageRating;
+    private Integer reviewCount;
 }

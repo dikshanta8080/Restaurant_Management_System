@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Users, Trash2, Search, AlertCircle } from 'lucide-react';
+import { Users, Trash2, Search } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { SkeletonRow } from '../../components/Skeleton';
 import Modal from '../../components/Modal';
@@ -11,11 +11,10 @@ const AllCustomersAdmin: React.FC = () => {
   const [search, setSearch] = useState('');
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  // Note: This endpoint may not exist in the backend - we'll show a fallback message
   const { data: customers, isLoading, error } = useQuery({
     queryKey: ['admin-customers'],
     queryFn: () => adminService.getAllCustomers(),
-    retry: 0,
+    retry: 1,
   });
 
   const deleteMutation = useMutation({
@@ -46,49 +45,39 @@ const AllCustomersAdmin: React.FC = () => {
           </div>
         </div>
 
-        {error ? (
-          <div className="card p-8 flex flex-col items-center text-center text-gray-400">
-            <AlertCircle size={48} className="mb-3 text-amber-400" />
-            <p className="text-lg font-semibold text-gray-600">Customer list endpoint not available</p>
-            <p className="text-sm mt-1 text-gray-400">The backend may not have a GET /v1/admin/customers endpoint. You can still delete specific users by ID using the delete user functionality.</p>
+        <div className="relative max-w-sm mb-6">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input value={search} onChange={e => setSearch(e.target.value)} className="input pl-9 text-sm" placeholder="Search customers…" />
+        </div>
+
+        {isLoading ? (
+          <div className="card divide-y">{Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}</div>
+        ) : filtered.length === 0 ? (
+          <div className="card flex flex-col items-center py-16 text-gray-400 text-center">
+            <Users size={48} className="mb-3 opacity-30" />
+            <p className="font-medium">{error ? 'Failed to fetch customers' : 'No customers found'}</p>
           </div>
         ) : (
-          <>
-            <div className="relative max-w-sm mb-6">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input value={search} onChange={e => setSearch(e.target.value)} className="input pl-9 text-sm" placeholder="Search customers…" />
-            </div>
-
-            {isLoading ? (
-              <div className="card divide-y">{Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}</div>
-            ) : filtered.length === 0 ? (
-              <div className="card flex flex-col items-center py-16 text-gray-400 text-center">
-                <Users size={48} className="mb-3 opacity-30" />
-                <p className="font-medium">No customers found</p>
+          <div className="card divide-y">
+            {filtered.map((c: any) => (
+              <div key={c.id} className="flex items-center gap-4 p-4 hover:bg-gray-50/50 transition-colors">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm">{c.name?.charAt(0).toUpperCase()}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900 truncate">{c.name}</p>
+                  <p className="text-sm text-gray-500 truncate">{c.email}</p>
+                </div>
+                <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">{c.role}</span>
+                <button
+                  onClick={() => setDeleteId(c.id)}
+                  className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
-            ) : (
-              <div className="card divide-y">
-                {filtered.map((c: any) => (
-                  <div key={c.id} className="flex items-center gap-4 p-4 hover:bg-gray-50/50 transition-colors">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold text-sm">{c.name?.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">{c.name}</p>
-                      <p className="text-sm text-gray-500 truncate">{c.email}</p>
-                    </div>
-                    <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">{c.role}</span>
-                    <button
-                      onClick={() => setDeleteId(c.id)}
-                      className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
+            ))}
+          </div>
         )}
       </div>
 

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,8 +56,34 @@ public class OrderService {
                 .totalPrice(order.getTotalPrice())
                 .status(order.getStatus())
                 .items(itemResponses)
+                .createdAt(order.getCreatedAt())
                 .userId(order.getUser().getId())
                 .build();
+    }
+
+    private Address resolveDeliveryAddress(User user, Long addressId) {
+        if (addressId != null) {
+            return addressRepository.findById(addressId)
+                    .orElseThrow(() -> new RuntimeException("Address not found"));
+        }
+        if (user.getAddress() != null) {
+            return user.getAddress();
+        }
+        throw new RuntimeException("Delivery address is required");
+    }
+
+    private void validateStatusTransition(OrderStatus currentStatus, OrderStatus nextStatus) {
+        if (currentStatus == nextStatus) {
+            return;
+        }
+        boolean valid = switch (currentStatus) {
+            case PENDING -> EnumSet.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED).contains(nextStatus);
+            case ACCEPTED -> nextStatus == OrderStatus.COMPLETED;
+            case COMPLETED, REJECTED -> false;
+        };
+        if (!valid) {
+            throw new RuntimeException("Invalid order status transition: " + currentStatus + " -> " + nextStatus);
+        }
     }
 
     @Transactional
@@ -65,8 +92,7 @@ public class OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Address address = addressRepository.findById(request.getAddressId())
-                .orElseThrow(() -> new RuntimeException("Address not found"));
+        Address address = resolveDeliveryAddress(user, request.getAddressId());
 
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new RuntimeException("Order must contain at least one item");
@@ -109,6 +135,20 @@ public class OrderService {
         return orders.map(this::mapToResponse);
     }
 
+    public Page<OrderResponse> getOwnerIncomingOrders(Pageable pageable) {
+        Long userId = getCurrentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() != Role.RESTAURANT && user.getRole() != Role.ADMIN) {
+            throw new RuntimeException("Only restaurant owners and admins can view incoming orders");
+        }
+
+        Page<Order> orders = user.getRole() == Role.ADMIN
+                ? orderRepository.findAll(pageable)
+                : orderRepository.findDistinctByOrderItemsRestaurantOwnerId(userId, pageable);
+        return orders.map(this::mapToResponse);
+    }
+
     public OrderResponse getOrderById(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -140,6 +180,7 @@ public class OrderService {
             throw new RuntimeException("Not authorized to update order status");
         }
 
+        validateStatusTransition(order.getStatus(), status);
         order.setStatus(status);
         order.getOrderItems().forEach(item -> item.setStatus(status));
         return mapToResponse(orderRepository.save(order));

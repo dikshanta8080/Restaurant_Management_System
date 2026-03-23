@@ -1,6 +1,7 @@
 import api from './axios';
 import { ApiResponse } from '../types/common';
 import { RestaurantResponse } from '../types/restaurant';
+import { PaymentResponse } from '../types/payment';
 
 export const adminService = {
   // GET /api/v1/admin/restaurants/pending
@@ -17,9 +18,13 @@ export const adminService = {
 
   // DELETE /api/v1/admin/deleteUser (uses @ModelAttribute so send as query params)
   deleteUser: (userId: number): Promise<any> =>
-    api.delete('/api/v1/admin/deleteUser', { params: { userId } }).then(r => r.data),
+    api.delete('/api/v1/admin/deleteUser', { params: { id: userId } }).then(r => r.data),
 
-  // Not a real backend endpoint - returns empty for graceful handling
+  // GET /api/v1/admin/customers
   getAllCustomers: (): Promise<any[]> =>
-    Promise.reject(new Error('Customer list endpoint not available')),
+    api.get('/api/v1/admin/customers').then(r => r.data?.responseObject ?? []),
+
+  // GET /api/v1/admin/payments
+  getAllPayments: (): Promise<PaymentResponse[]> =>
+    api.get('/api/v1/admin/payments').then(r => r.data?.responseObject ?? []),
 };

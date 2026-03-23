@@ -6,13 +6,13 @@ import { orderService } from '../services/orderService';
 import { OrderStatus } from '../types/order';
 import { SkeletonText } from '../components/Skeleton';
 
-const statusSteps: OrderStatus[] = ['PENDING', 'CONFIRMED', 'DELIVERED'];
+const statusSteps: OrderStatus[] = ['PENDING', 'ACCEPTED', 'COMPLETED'];
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; icon: React.ReactNode }> = {
   PENDING: { label: 'Pending', color: 'text-yellow-600 bg-yellow-50', icon: <Clock size={20} className="text-yellow-500" /> },
-  CONFIRMED: { label: 'Confirmed / Preparing', color: 'text-blue-600 bg-blue-50', icon: <Loader2 size={20} className="text-blue-500 animate-spin" /> },
-  DELIVERED: { label: 'Delivered', color: 'text-green-600 bg-green-50', icon: <CheckCircle size={20} className="text-green-500" /> },
-  CANCELLED: { label: 'Cancelled', color: 'text-red-600 bg-red-50', icon: <XCircle size={20} className="text-red-500" /> },
+  ACCEPTED: { label: 'Accepted / Preparing', color: 'text-blue-600 bg-blue-50', icon: <Loader2 size={20} className="text-blue-500 animate-spin" /> },
+  COMPLETED: { label: 'Completed', color: 'text-green-600 bg-green-50', icon: <CheckCircle size={20} className="text-green-500" /> },
+  REJECTED: { label: 'Rejected', color: 'text-red-600 bg-red-50', icon: <XCircle size={20} className="text-red-500" /> },
 };
 
 const OrderDetailPage: React.FC = () => {
@@ -65,8 +65,8 @@ const OrderDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Progress tracker (only for non-cancelled) */}
-          {order.status !== 'CANCELLED' && (
+          {/* Progress tracker (only for non-rejected) */}
+          {order.status !== 'REJECTED' && (
             <div className="mb-8">
               <div className="flex items-center justify-between relative">
                 <div className="absolute left-0 right-0 top-5 h-0.5 bg-gray-200 -z-0" />

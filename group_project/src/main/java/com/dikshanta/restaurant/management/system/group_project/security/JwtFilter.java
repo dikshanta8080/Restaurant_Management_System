@@ -32,29 +32,19 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
             String token = authHeader.split(" ")[1];
-            System.out.println("Processing token in filter: " + token);
             String username = jwtService.extractUsername(token);
-            System.out.println("Extracted username: " + username);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-                System.out.println("Loaded UserDetails: " + userDetails.getUsername());
                 if (jwtService.isValid(token, userDetails)) {
-                    System.out.println("Token is valid!");
                     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-                } else {
-                    System.out.println("Token is NOT valid!");
                 }
-            } else {
-                System.out.println("Skipped auth check: username=" + username + ", current context auth=" + SecurityContextHolder.getContext().getAuthentication());
             }
             filterChain.doFilter(request, response);
         } catch (AuthenticationServiceException e) {
-            System.out.println("AuthenticationServiceException caught: " + e.getMessage());
             authenticationEntryPoint.commence(request, response, e);
         } catch (Exception e) {
-            System.out.println("General Exception caught in filter: " + e.getMessage());
-            e.printStackTrace();
+            authenticationEntryPoint.commence(request, response, new AuthenticationServiceException("Invalid authentication token", e));
         }
     }
 }

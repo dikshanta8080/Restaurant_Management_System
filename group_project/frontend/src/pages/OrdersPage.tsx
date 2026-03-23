@@ -9,9 +9,9 @@ import { SkeletonRow } from '../components/Skeleton';
 
 const statusConfig: Record<OrderStatus, { label: string; cls: string; icon: React.ReactNode }> = {
   PENDING: { label: 'Pending', cls: 'badge-pending', icon: <Clock size={12} /> },
-  CONFIRMED: { label: 'Confirmed', cls: 'badge-confirmed', icon: <Loader size={12} className="animate-spin" /> },
-  DELIVERED: { label: 'Delivered', cls: 'badge-delivered', icon: <CheckCircle size={12} /> },
-  CANCELLED: { label: 'Cancelled', cls: 'badge-cancelled', icon: <XCircle size={12} /> },
+  ACCEPTED: { label: 'Accepted', cls: 'badge-confirmed', icon: <Loader size={12} className="animate-spin" /> },
+  COMPLETED: { label: 'Completed', cls: 'badge-delivered', icon: <CheckCircle size={12} /> },
+  REJECTED: { label: 'Rejected', cls: 'badge-cancelled', icon: <XCircle size={12} /> },
 };
 
 const OrdersPage: React.FC = () => {

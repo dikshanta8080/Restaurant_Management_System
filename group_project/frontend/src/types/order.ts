@@ -1,4 +1,4 @@
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'DELIVERED' | 'CANCELLED';
+export type OrderStatus = 'PENDING' | 'ACCEPTED' | 'COMPLETED' | 'REJECTED';
 
 export interface OrderItemRequest {
   foodItemId: number;
@@ -7,6 +7,7 @@ export interface OrderItemRequest {
 
 export interface OrderCreateRequest {
   items: OrderItemRequest[];
+  addressId?: number;
 }
 
 export interface OrderItemResponse {

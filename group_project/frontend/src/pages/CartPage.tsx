@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package } from 'lucide-react';
 import { cartService } from '../services/cartService';
 import { orderService } from '../services/orderService';
+import { paymentService } from '../services/paymentService';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -53,10 +54,22 @@ const CartPage: React.FC = () => {
     mutationFn: () => orderService.placeOrder({
       items: cartItems.map(i => ({ foodItemId: i.foodItemId, quantity: i.quantity })),
     }),
-    onSuccess: (order) => {
-      clearCart();
-      toast.success('Order placed successfully!');
-      navigate(`/orders/${order.id}`);
+    onSuccess: async (order) => {
+      try {
+        await paymentService.payNowDummy(order.id);
+        clearCart();
+        toast.success('Order placed and paid successfully (dummy payment)!');
+        navigate(`/payment/success?order_id=${order.id}`);
+      } catch (e: any) {
+        toast.error(e?.response?.data?.message || 'Dummy payment failed, order created without payment');
+        navigate(`/payment/cancel?order_id=${order.id}`);
+        return;
+      }
+      try {
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+      } catch {
+        // ignore query cache invalidation errors, UI still navigates safely
+      }
     },
     onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to place order'),
   });
@@ -157,7 +170,7 @@ const CartPage: React.FC = () => {
                 className="btn-primary w-full mt-6 flex items-center justify-center gap-2 py-3"
               >
                 {placeOrderMutation.isPending ? 'Placing order…' : (
-                  <>Place Order <ArrowRight size={16} /></>
+                  <>Pay Now (Dummy) <ArrowRight size={16} /></>
                 )}
               </button>
               <button onClick={() => navigate('/restaurants')} className="btn-secondary w-full mt-2 text-sm">

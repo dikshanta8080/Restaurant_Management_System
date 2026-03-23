@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -62,19 +63,21 @@ public class FoodItemController {
             @RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize,
             @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy,
             @RequestParam(value = "sortDir", defaultValue = "asc", required = false) String sortDir,
-            @RequestParam(value = "categoryId", required = false) Long categoryId) {
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(value = "maxPrice", required = false) BigDecimal maxPrice) {
 
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending()
                 : Sort.by(sortBy).descending();
 
-        Pageable pageable = PageRequest.of(pageNo - 1, pageSize, sort);
+        Pageable pageable = PageRequest.of(Math.max(pageNo, 0), pageSize, sort);
 
-        Page<FoodItemResponse> responses = foodItemService.getAllFoodItems(categoryId, pageable);
+        Page<FoodItemResponse> responses = foodItemService.getAllFoodItems(categoryId, search, minPrice, maxPrice, pageable);
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/allCategoriws")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'RESTAURANT', 'ADMIN')")
+    @GetMapping({"/allCategoriws", "/allCategories"})
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAllCategories() {
         List<CategoryResponse> allCategories = categoryService.getAllCategories();
         ApiResponse<List<CategoryResponse>> apiResponse = ApiResponse.<List<CategoryResponse>>builder()

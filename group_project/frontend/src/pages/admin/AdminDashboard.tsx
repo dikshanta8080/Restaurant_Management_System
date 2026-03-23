@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Store, Users, Clock, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Store, Users, Clock, ArrowRight, CreditCard } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import StatCard from '../../components/StatCard';
 import { SkeletonStat } from '../../components/Skeleton';
@@ -109,11 +109,12 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {[
             { to: '/admin/approvals', label: 'Restaurant Approvals', desc: 'Approve or reject registrations', icon: <Clock size={22} />, color: 'bg-amber-100 text-amber-600' },
             { to: '/admin/restaurants', label: 'All Restaurants', desc: 'View and manage all restaurants', icon: <Store size={22} />, color: 'bg-orange-100 text-orange-600' },
             { to: '/admin/customers', label: 'Customers', desc: 'View and manage customers', icon: <Users size={22} />, color: 'bg-blue-100 text-blue-600' },
+            { to: '/admin/payments', label: 'Payments', desc: 'View dummy payment records', icon: <CreditCard size={22} />, color: 'bg-emerald-100 text-emerald-600' },
           ].map(item => (
             <Link key={item.to} to={item.to} className="card p-5 flex items-center justify-between hover:shadow-md transition-all group">
               <div className="flex items-center gap-3">

@@ -10,7 +10,7 @@ import { SkeletonStat } from '../../components/Skeleton';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { OrderStatus } from '../../types/order';
+import { OrderResponse, OrderStatus } from '../../types/order';
 
 const RestaurantDashboard: React.FC = () => {
   const { data: restaurantData, isLoading: loadingRest } = useQuery({
@@ -31,20 +31,20 @@ const RestaurantDashboard: React.FC = () => {
   const { data: orders } = useQuery({
     queryKey: ['restaurant-orders'],
     queryFn: async () => {
-      const res = await orderService.getUserOrders(0, 100);
+      const res = await orderService.getRestaurantIncomingOrders(0, 100);
       return res.content ?? [];
     },
     retry: 1,
   });
 
-  const totalRevenue = orders?.filter(o => o.status === 'DELIVERED')
-    .reduce((s, o) => s + Number(o.totalPrice), 0) ?? 0;
-  const completedOrders = orders?.filter(o => o.status === 'DELIVERED').length ?? 0;
+  const totalRevenue = orders?.filter((o: OrderResponse) => o.status === 'COMPLETED')
+    .reduce((s: number, o: OrderResponse) => s + Number(o.totalPrice), 0) ?? 0;
+  const completedOrders = orders?.filter((o: OrderResponse) => o.status === 'COMPLETED').length ?? 0;
 
   // Chart data — orders by status
-  const chartData: { name: string; count: number }[] = ['PENDING', 'CONFIRMED', 'DELIVERED', 'CANCELLED'].map(s => ({
+  const chartData: { name: string; count: number }[] = ['PENDING', 'ACCEPTED', 'COMPLETED', 'REJECTED'].map(s => ({
     name: s.charAt(0) + s.slice(1).toLowerCase(),
-    count: orders?.filter(o => o.status === s as OrderStatus).length ?? 0,
+    count: orders?.filter((o: OrderResponse) => o.status === s as OrderStatus).length ?? 0,
   }));
 
   return (

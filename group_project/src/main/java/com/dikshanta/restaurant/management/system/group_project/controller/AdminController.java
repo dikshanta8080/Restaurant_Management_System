@@ -3,6 +3,7 @@ package com.dikshanta.restaurant.management.system.group_project.controller;
 import com.dikshanta.restaurant.management.system.group_project.dto.request.RestaurantStatusUpdateRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.request.UserDeleteRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.RestaurantResponse;
+import com.dikshanta.restaurant.management.system.group_project.dto.response.UserResponse;
 import com.dikshanta.restaurant.management.system.group_project.model.ApiResponse;
 import com.dikshanta.restaurant.management.system.group_project.service.RestaurantService;
 import com.dikshanta.restaurant.management.system.group_project.service.UserService;
@@ -72,5 +73,16 @@ public class AdminController {
                 .responseObject("User deleted!")
                 .build();
         return new ResponseEntity<>(apiResponse, apiResponse.getHttpStatus());
+    }
+
+    @GetMapping("/customers")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getCustomers() {
+        List<UserResponse> customers = userService.getCustomers();
+        ApiResponse<List<UserResponse>> apiResponse = ApiResponse.<List<UserResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Fetched all customers")
+                .responseObject(customers)
+                .build();
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 }
