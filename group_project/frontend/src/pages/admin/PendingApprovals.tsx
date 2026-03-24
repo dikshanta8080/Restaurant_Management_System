@@ -5,6 +5,7 @@ import { adminService } from '../../services/adminService';
 import { SkeletonCard } from '../../components/Skeleton';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '../../utils/imageUtils';
+import BackButton from '../../components/BackButton';
 
 const PendingApprovals: React.FC = () => {
   const queryClient = useQueryClient();
@@ -32,6 +33,7 @@ const PendingApprovals: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <BackButton className="mb-6" redirectTo="/admin" />
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
             <Clock size={22} className="text-amber-600" />

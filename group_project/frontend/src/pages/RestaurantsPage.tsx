@@ -4,6 +4,7 @@ import { Search, Store, Star } from 'lucide-react';
 import { customerService } from '../services/customerService';
 import RestaurantCard from '../components/RestaurantCard';
 import { SkeletonCard } from '../components/Skeleton';
+import BackButton from '../components/BackButton';
 
 const RestaurantsPage: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -31,6 +32,7 @@ const RestaurantsPage: React.FC = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <BackButton className="mb-5" />
           <h1 className="text-4xl font-black text-gray-900 mb-2">Explore Restaurants</h1>
           <p className="text-gray-500">Find your next favourite meal from our verified restaurants</p>
           {/* Search */}

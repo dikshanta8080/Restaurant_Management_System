@@ -1,0 +1,132 @@
+export const NEPAL_PROVINCES = [
+  'Koshi',
+  'Madhesh',
+  'Bagmati',
+  'Gandaki',
+  'Lumbini',
+  'Karnali',
+  'Sudurpashchim',
+] as const;
+
+export type NepalProvince = (typeof NEPAL_PROVINCES)[number];
+
+export const NEPAL_DISTRICTS_BY_PROVINCE: Record<NepalProvince, string[]> = {
+  Koshi: [
+    'Jhapa',
+    'Morang',
+    'Sunsari',
+    'Ilam',
+    'Dhankuta',
+    'Tehrathum',
+    'Panchthar',
+    'Taplejung',
+    'Bhojpur',
+    'Okhaldhunga',
+    'Khotang',
+    'Udayapur',
+    'Solukhumbu',
+    'Sankhuwasabha',
+  ],
+  Madhesh: [
+    'Dhanusha',
+    'Mahottari',
+    'Sarlahi',
+    'Siraha',
+    'Saptari',
+    'Rautahat',
+    'Bara',
+    'Parsa',
+  ],
+  Bagmati: [
+    'Kathmandu',
+    'Lalitpur',
+    'Bhaktapur',
+    'Nuwakot',
+    'Dhading',
+    'Rasuwa',
+    'Sindhuli',
+    'Makwanpur',
+    'Chitwan',
+    'Kavrepalanchok',
+    'Sindhupalchok',
+    'Ramechhap',
+    'Dolakha',
+  ],
+  Gandaki: [
+    'Kaski',
+    'Lamjung',
+    'Syangja',
+    'Tanahun',
+    'Parbat',
+    'Myagdi',
+    'Gorkha',
+    'Manang',
+    'Mustang',
+  ],
+  Lumbini: [
+    'Rupandehi',
+    'Kapilvastu',
+    'Dang',
+    'Banke',
+    'Bardiya',
+    'Pyuthan',
+    'Rolpa',
+    'Arghakhanchi',
+    'Gulmi',
+    'Palpa',
+    'Nawalparasi',
+  ],
+  Karnali: [
+    'Surkhet',
+    'Dailekh',
+    'Jajarkot',
+    'Kalikot',
+    'Jumla',
+    'Mugu',
+    'Humla',
+    'Dolpa',
+  ],
+  Sudurpashchim: [
+    'Kailali',
+    'Kanchanpur',
+    'Achham',
+    'Bajhang',
+    'Bajura',
+    'Dadeldhura',
+    'Doti',
+    'Baitadi',
+  ],
+};
+
+export const NEPAL_DISTRICTS_ALL = Array.from(
+  new Set(Object.values(NEPAL_DISTRICTS_BY_PROVINCE).flat()),
+);
+
+// A small set of realistic city suggestions (not exhaustive).
+export const NEPAL_DISTRICT_TO_CITIES: Record<string, string[]> = {
+  Kathmandu: ['Kathmandu', 'Thamel', 'Baneswor', 'Lazimpat', 'Baluwatar'],
+  Lalitpur: ['Lalitpur', 'Patan', 'Lagankhel', 'Jawalakhel'],
+  Bhaktapur: ['Bhaktapur', 'Thimi', 'Madhyapur Thimi'],
+  Kaski: ['Pokhara', 'Lakeside', 'Lekhnath'],
+  Kanchanpur: ['Mahendranagar'],
+  Kailali: ['Dhangadhi'],
+  Rupandehi: ['Butwal'],
+  Banke: ['Nepalgunj'],
+  Dang: ['Tulsipur', 'Ghorahi'],
+  Morang: ['Biratnagar'],
+  Sunsari: ['Dharan'],
+  Jhapa: ['Birtamod'],
+  Ilam: ['Ilam'],
+  Dhankuta: ['Dhankuta'],
+  Surkhet: ['Birendranagar'],
+};
+
+export const DEFAULT_STREETS = [
+  'New Baneshwor',
+  'Lazimpat',
+  'Thamel',
+  'Lakeside',
+  'Bhairahawa Road',
+  'Main Road',
+] as const;
+

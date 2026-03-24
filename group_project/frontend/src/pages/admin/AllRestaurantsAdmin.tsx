@@ -5,11 +5,14 @@ import { adminService } from '../../services/adminService';
 import { SkeletonRow } from '../../components/Skeleton';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '../../utils/imageUtils';
+import BackButton from '../../components/BackButton';
+import Modal from '../../components/Modal';
 
 const AllRestaurantsAdmin: React.FC = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [brokenImageIds, setBrokenImageIds] = useState<Record<number, boolean>>({});
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const { data: restaurants, isLoading } = useQuery({
     queryKey: ['admin-restaurants'],
@@ -30,6 +33,30 @@ const AllRestaurantsAdmin: React.FC = () => {
     onError: (e: any) => toast.error(e?.response?.data?.message || 'Update failed'),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => adminService.deleteRestaurant(id),
+    onMutate: async (id: number) => {
+      await queryClient.cancelQueries({ queryKey: ['admin-restaurants'] });
+      const previous = queryClient.getQueryData<any[]>(['admin-restaurants']);
+      queryClient.setQueryData<any[]>(['admin-restaurants'], old =>
+        (old ?? []).filter(r => r.id !== id)
+      );
+      return { previous };
+    },
+    onSuccess: () => {
+      toast.success('Restaurant deleted successfully');
+      setDeleteId(null);
+      queryClient.invalidateQueries({ queryKey: ['admin-restaurants'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-pending'] });
+      queryClient.invalidateQueries({ queryKey: ['restaurants'] });
+      queryClient.invalidateQueries({ queryKey: ['home-feed'] });
+    },
+    onError: (e: any) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-restaurants'] });
+      toast.error(e?.response?.data?.message || 'Failed to delete restaurant');
+    },
+  });
+
   const filtered = restaurants?.filter(r =>
     (r.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
     r.ownerName?.toLowerCase().includes(search.toLowerCase())
@@ -44,6 +71,7 @@ const AllRestaurantsAdmin: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <BackButton className="mb-6" redirectTo="/admin" />
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
             <Store size={22} className="text-orange-600" />
@@ -118,12 +146,46 @@ const AllRestaurantsAdmin: React.FC = () => {
                       Reject
                     </button>
                   )}
+                  <button
+                    onClick={() => setDeleteId(r.id)}
+                    className="text-xs font-medium px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors border border-red-100 inline-flex items-center gap-1.5"
+                  >
+                    <Trash2 size={13} />
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        title="Delete Restaurant"
+      >
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Trash2 size={28} className="text-red-500" />
+          </div>
+          <p className="text-gray-600 mb-6">
+            Are you sure you want to delete this restaurant? This will also remove related food items.
+          </p>
+          <div className="flex gap-3">
+            <button onClick={() => setDeleteId(null)} className="btn-secondary flex-1">
+              Cancel
+            </button>
+            <button
+              onClick={() => deleteId && deleteMutation.mutate(deleteId)}
+              disabled={deleteMutation.isPending}
+              className="btn-danger flex-1"
+            >
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 package com.dikshanta.restaurant.management.system.group_project.controller;
 
 import com.dikshanta.restaurant.management.system.group_project.dto.request.OrderCreateRequest;
+import com.dikshanta.restaurant.management.system.group_project.dto.response.OrderPlacementResponse;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.OrderResponse;
 import com.dikshanta.restaurant.management.system.group_project.enums.OrderStatus;
 import com.dikshanta.restaurant.management.system.group_project.service.OrderService;
@@ -19,7 +20,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/customer/orders")
-    public ResponseEntity<OrderResponse> placeOrder(@RequestBody @Valid OrderCreateRequest request) {
+    public ResponseEntity<OrderPlacementResponse> placeOrder(@RequestBody @Valid OrderCreateRequest request) {
         return ResponseEntity.ok(orderService.placeOrder(request));
     }
 
@@ -36,6 +37,12 @@ public class OrderController {
     @GetMapping("/customer/orders/{id}")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.getOrderById(id));
+    }
+
+    @DeleteMapping("/customer/orders/{id}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
+        orderService.deleteOrder(id);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/restaurant/orders/{id}/status")

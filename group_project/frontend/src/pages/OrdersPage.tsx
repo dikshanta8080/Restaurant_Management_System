@@ -6,9 +6,11 @@ import { orderService } from '../services/orderService';
 import { OrderResponse, OrderStatus } from '../types/order';
 import Pagination from '../components/Pagination';
 import { SkeletonRow } from '../components/Skeleton';
+import BackButton from '../components/BackButton';
 
 const statusConfig: Record<OrderStatus, { label: string; cls: string; icon: React.ReactNode }> = {
   PENDING: { label: 'Pending', cls: 'badge-pending', icon: <Clock size={12} /> },
+  PAID: { label: 'Paid', cls: 'badge-confirmed', icon: <CheckCircle size={12} /> },
   ACCEPTED: { label: 'Accepted', cls: 'badge-confirmed', icon: <Loader size={12} className="animate-spin" /> },
   COMPLETED: { label: 'Completed', cls: 'badge-delivered', icon: <CheckCircle size={12} /> },
   REJECTED: { label: 'Rejected', cls: 'badge-cancelled', icon: <XCircle size={12} /> },
@@ -26,6 +28,7 @@ const OrdersPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <BackButton className="mb-6" />
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
             <Package size={22} className="text-orange-600" />

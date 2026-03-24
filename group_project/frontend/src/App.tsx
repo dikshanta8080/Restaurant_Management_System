@@ -2,13 +2,13 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 
 // Pages
-import LandingPage from './pages/LandingPage';
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import RestaurantsPage from './pages/RestaurantsPage';
@@ -55,6 +55,20 @@ const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <>{children}</>
 );
 
+// Redirect ADMIN and RESTAURANT users away from customer-facing public pages
+const PublicOnlyForCustomers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin" replace />;
+  }
+  if (user?.role === 'RESTAURANT') {
+    return <Navigate to="/restaurant/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -67,16 +81,43 @@ function App() {
               <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
 
               {/* Public routes with navbar */}
-              <Route path="/" element={<WithNavbar><LandingPage /></WithNavbar>} />
-              <Route path="/restaurants" element={<WithNavbar><RestaurantsPage /></WithNavbar>} />
-              <Route path="/restaurants/:id" element={<WithNavbar><RestaurantDetailPage /></WithNavbar>} />
+              <Route
+                path="/"
+                element={
+                  <WithNavbar>
+                    <PublicOnlyForCustomers>
+                      <HomePage />
+                    </PublicOnlyForCustomers>
+                  </WithNavbar>
+                }
+              />
+              <Route
+                path="/restaurants"
+                element={
+                  <WithNavbar>
+                    <PublicOnlyForCustomers>
+                      <RestaurantsPage />
+                    </PublicOnlyForCustomers>
+                  </WithNavbar>
+                }
+              />
+              <Route
+                path="/restaurants/:id"
+                element={
+                  <WithNavbar>
+                    <PublicOnlyForCustomers>
+                      <RestaurantDetailPage />
+                    </PublicOnlyForCustomers>
+                  </WithNavbar>
+                }
+              />
               <Route path="/register-restaurant" element={<WithNavbar><RegisterRestaurantPage /></WithNavbar>} />
-              <Route path="/payment/success" element={
+              <Route path="/payment-success" element={
                 <ProtectedRoute roles={['CUSTOMER']}>
                   <WithNavbar><CheckoutSuccessPage /></WithNavbar>
                 </ProtectedRoute>
               } />
-              <Route path="/payment/cancel" element={
+              <Route path="/payment-cancel" element={
                 <ProtectedRoute roles={['CUSTOMER']}>
                   <WithNavbar><CheckoutCancelPage /></WithNavbar>
                 </ProtectedRoute>

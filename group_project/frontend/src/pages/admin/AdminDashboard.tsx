@@ -49,7 +49,6 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {loadingRest ? (
             Array.from({ length: 4 }).map((_, i) => <SkeletonStat key={i} />)
@@ -64,7 +63,6 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Pie Chart */}
           {pieData.length > 0 && (
             <div className="card p-6">
               <h2 className="text-lg font-bold text-gray-900 mb-4">Restaurant Status Distribution</h2>
@@ -81,7 +79,6 @@ const AdminDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Pending List Preview */}
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-900">Pending Approvals</h2>
@@ -108,13 +105,12 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {[
             { to: '/admin/approvals', label: 'Restaurant Approvals', desc: 'Approve or reject registrations', icon: <Clock size={22} />, color: 'bg-amber-100 text-amber-600' },
             { to: '/admin/restaurants', label: 'All Restaurants', desc: 'View and manage all restaurants', icon: <Store size={22} />, color: 'bg-orange-100 text-orange-600' },
             { to: '/admin/customers', label: 'Customers', desc: 'View and manage customers', icon: <Users size={22} />, color: 'bg-blue-100 text-blue-600' },
-            { to: '/admin/payments', label: 'Payments', desc: 'View dummy payment records', icon: <CreditCard size={22} />, color: 'bg-emerald-100 text-emerald-600' },
+            { to: '/admin/payments', label: 'Payments', desc: 'View payment records', icon: <CreditCard size={22} />, color: 'bg-emerald-100 text-emerald-600' },
           ].map(item => (
             <Link key={item.to} to={item.to} className="card p-5 flex items-center justify-between hover:shadow-md transition-all group">
               <div className="flex items-center gap-3">

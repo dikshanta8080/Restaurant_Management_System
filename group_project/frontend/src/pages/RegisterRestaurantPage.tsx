@@ -8,6 +8,14 @@ import toast from 'react-hot-toast';
 import { customerService } from '../services/customerService';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
+import {
+  DEFAULT_STREETS,
+  NEPAL_DISTRICT_TO_CITIES,
+  NEPAL_DISTRICTS_ALL,
+  NEPAL_DISTRICTS_BY_PROVINCE,
+  NEPAL_PROVINCES,
+  type NepalProvince,
+} from '../utils/nepalLocations';
 
 const schema = z.object({
   name: z.string().min(2, 'Restaurant name required'),
@@ -40,9 +48,19 @@ const RegisterRestaurantPage: React.FC = () => {
     }
   };
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
+
+  const selectedProvince = watch('province');
+  const selectedDistrict = watch('district');
+
+  const districtOptions =
+    selectedProvince && NEPAL_DISTRICTS_BY_PROVINCE[selectedProvince as NepalProvince]
+      ? NEPAL_DISTRICTS_BY_PROVINCE[selectedProvince as NepalProvince]
+      : NEPAL_DISTRICTS_ALL;
+
+  const cityOptions = selectedDistrict ? NEPAL_DISTRICT_TO_CITIES[selectedDistrict] ?? [] : [];
 
   const mutation = useMutation({
     mutationFn: (data: FormData) =>
@@ -95,7 +113,6 @@ const RegisterRestaurantPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Notice */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex gap-3">
           <CheckCircle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
@@ -105,7 +122,6 @@ const RegisterRestaurantPage: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit(d => mutation.mutate(d))} className="card p-8 space-y-5">
-          {/* Image Upload */}
           <div>
             <label className="label">Restaurant Image</label>
             <label className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
@@ -151,22 +167,56 @@ const RegisterRestaurantPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Province *</label>
-                <input {...register('province')} className="input" placeholder="e.g. Bagmati" />
+                <select {...register('province')} className="input">
+                  <option value="">Select Province</option>
+                  {NEPAL_PROVINCES.map(p => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
                 {errors.province && <p className="text-red-500 text-xs mt-1">{errors.province.message}</p>}
               </div>
               <div>
                 <label className="label">District *</label>
-                <input {...register('district')} className="input" placeholder="e.g. Kathmandu" />
+                <select {...register('district')} className="input">
+                  <option value="">Select District</option>
+                  {districtOptions.map(d => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
                 {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district.message}</p>}
               </div>
               <div>
                 <label className="label">City *</label>
-                <input {...register('city')} className="input" placeholder="e.g. Kathmandu" />
+                <input
+                  {...register('city')}
+                  className="input"
+                  placeholder="e.g. Kathmandu"
+                  list="city-suggestions"
+                />
+                <datalist id="city-suggestions">
+                  {cityOptions.map(c => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
                 {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
               </div>
               <div>
                 <label className="label">Street *</label>
-                <input {...register('street')} className="input" placeholder="e.g. New Baneshwor" />
+                <input
+                  {...register('street')}
+                  className="input"
+                  placeholder="e.g. Thamel"
+                  list="street-suggestions"
+                />
+                <datalist id="street-suggestions">
+                  {DEFAULT_STREETS.map(s => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
                 {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street.message}</p>}
               </div>
             </div>

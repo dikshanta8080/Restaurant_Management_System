@@ -7,6 +7,14 @@ import { ChefHat, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authService } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
+import {
+  DEFAULT_STREETS,
+  NEPAL_DISTRICT_TO_CITIES,
+  NEPAL_DISTRICTS_ALL,
+  NEPAL_DISTRICTS_BY_PROVINCE,
+  NEPAL_PROVINCES,
+  type NepalProvince,
+} from '../utils/nepalLocations';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -29,10 +37,20 @@ const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = React.useState(false);
 
-  const { register, handleSubmit, setError, formState: { errors, isSubmitting, isValid } } = useForm<FormData>({
+  const { register, handleSubmit, setError, watch, formState: { errors, isSubmitting, isValid } } = useForm<FormData>({
     resolver: zodResolver(schema),
     mode: 'onChange',
   });
+
+  const selectedProvince = watch('province');
+  const selectedDistrict = watch('district');
+
+  const districtOptions =
+    selectedProvince && NEPAL_DISTRICTS_BY_PROVINCE[selectedProvince as NepalProvince]
+      ? NEPAL_DISTRICTS_BY_PROVINCE[selectedProvince as NepalProvince]
+      : NEPAL_DISTRICTS_ALL;
+
+  const cityOptions = selectedDistrict ? NEPAL_DISTRICT_TO_CITIES[selectedDistrict] ?? [] : [];
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -76,7 +94,6 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left panel */}
       <div className="hidden lg:flex flex-col justify-center w-1/2 bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 p-12 relative overflow-hidden">
         <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-red-700/20 rounded-full blur-3xl" />
@@ -97,7 +114,6 @@ const RegisterPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Right form */}
       <div className="flex-1 flex items-center justify-center p-6 bg-gray-50">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
@@ -154,22 +170,58 @@ const RegisterPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="label">Province</label>
-                <input {...register('province')} type="text" placeholder="e.g. Ontario" className="input" />
+                <select {...register('province')} className="input">
+                  <option value="">Select Province</option>
+                  {NEPAL_PROVINCES.map(p => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
                 {errors.province && <p className="text-red-500 text-xs mt-1">{errors.province.message}</p>}
               </div>
               <div>
                 <label className="label">District</label>
-                <input {...register('district')} type="text" placeholder="e.g. Waterloo" className="input" />
+                <select {...register('district')} className="input">
+                  <option value="">Select District</option>
+                  {districtOptions.map(d => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
                 {errors.district && <p className="text-red-500 text-xs mt-1">{errors.district.message}</p>}
               </div>
               <div>
                 <label className="label">City</label>
-                <input {...register('city')} type="text" placeholder="e.g. New York" className="input" />
+                <input
+                  {...register('city')}
+                  type="text"
+                  placeholder="e.g. Kathmandu"
+                  className="input"
+                  list="city-suggestions"
+                />
+                <datalist id="city-suggestions">
+                  {cityOptions.map(c => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
                 {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
               </div>
               <div>
                 <label className="label">Street</label>
-                <input {...register('street')} type="text" placeholder="e.g. 221B Baker Street" className="input" />
+                <input
+                  {...register('street')}
+                  type="text"
+                  placeholder="e.g. Thamel"
+                  className="input"
+                  list="street-suggestions"
+                />
+                <datalist id="street-suggestions">
+                  {DEFAULT_STREETS.map(s => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
                 {errors.street && <p className="text-red-500 text-xs mt-1">{errors.street.message}</p>}
               </div>
             </div>

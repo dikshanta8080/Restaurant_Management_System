@@ -1,9 +1,9 @@
 import api from './axios';
-import { OrderCreateRequest, OrderResponse } from '../types/order';
+import { OrderCreateRequest, OrderPlacementResponse, OrderResponse } from '../types/order';
 
 export const orderService = {
-  // POST /api/v1/customer/orders → returns OrderResponse directly (no wrapper)
-  placeOrder: (request: OrderCreateRequest): Promise<OrderResponse> =>
+  // POST /api/v1/customer/orders → returns OrderPlacementResponse (split by restaurant)
+  placeOrder: (request: OrderCreateRequest): Promise<OrderPlacementResponse> =>
     api.post('/api/v1/customer/orders', request).then(r => r.data),
 
   // GET /api/v1/customer/orders → returns Spring Page<OrderResponse> directly

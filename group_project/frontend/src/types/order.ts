@@ -1,4 +1,4 @@
-export type OrderStatus = 'PENDING' | 'ACCEPTED' | 'COMPLETED' | 'REJECTED';
+export type OrderStatus = 'PENDING' | 'PAID' | 'ACCEPTED' | 'COMPLETED' | 'REJECTED';
 
 export interface OrderItemRequest {
   foodItemId: number;
@@ -36,4 +36,9 @@ export interface OrderResponse {
   deliveryDistrict?: string;
   deliveryCity?: string;
   deliveryStreet?: string;
+}
+
+export interface OrderPlacementResponse {
+  orders: OrderResponse[];
+  totalPrice: number;
 }

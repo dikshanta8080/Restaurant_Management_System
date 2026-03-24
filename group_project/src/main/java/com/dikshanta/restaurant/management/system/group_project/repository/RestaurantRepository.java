@@ -16,6 +16,8 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
     boolean existsByOwner(User owner);
 
+    Optional<Restaurant> findByName(String name);
+
     /**
      * Used by RestaurantService.getOwnRestaurant() — find by owner's user ID.
      */

@@ -29,8 +29,8 @@ public class Payment extends DateAuditable {
     private String transactionId;
     private LocalDateTime paymentTimestamp;
 
-    @OneToOne
-    @JoinColumn(name = "order_id", unique = true)
+    @ManyToOne
+    @JoinColumn(name = "order_id")
     private Order order;
 
     @ManyToOne

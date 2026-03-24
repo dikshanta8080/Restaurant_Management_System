@@ -47,6 +47,7 @@ public class SecurityConfig {
 
                         // ── Public (no auth required) ──────────────────────────────────────
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/payments/webhook").permitAll()
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -63,6 +64,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/restaurant/allCategoriws").permitAll()
                         // Serve uploaded images without auth
                         .requestMatchers("/uploads/**").permitAll()
+                        // Backwards-compatible public routes (older frontends)
+                        .requestMatchers(HttpMethod.GET, "/restaurants/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/foods/**").permitAll()
 
                         // ── Admin-only ────────────────────────────────────────────────────
                         .requestMatchers("/api/v1/admin/**").hasRole(ADMIN.name())

@@ -51,6 +51,17 @@ public class AdminController {
         return new ResponseEntity<>(apiResponse, HttpStatus.OK);
     }
 
+    @DeleteMapping("/restaurants/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteRestaurant(@PathVariable Long id) {
+        restaurantService.deleteRestaurantByAdmin(id);
+        ApiResponse<String> apiResponse = ApiResponse.<String>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Restaurant deleted successfully")
+                .responseObject("Deleted")
+                .build();
+        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
+    }
+
     @PutMapping("/updateStatus")
     public ResponseEntity<ApiResponse<String>> updateRestaurantStatus(
             @RequestBody @Valid RestaurantStatusUpdateRequest request) {

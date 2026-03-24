@@ -9,6 +9,13 @@ export interface RestaurantResponse {
   status: RestaurantStatus;
   averageRating?: number;
   reviewCount?: number;
+
+  // Nepal location fields (used for filtering & display)
+  addressId?: number;
+  province?: string;
+  district?: string;
+  city?: string;
+  street?: string;
 }
 
 export interface RestaurantCreateRequest {

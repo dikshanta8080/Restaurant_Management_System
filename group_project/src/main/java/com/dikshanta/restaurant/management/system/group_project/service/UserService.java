@@ -12,6 +12,8 @@ import com.dikshanta.restaurant.management.system.group_project.mappers.request.
 import com.dikshanta.restaurant.management.system.group_project.model.entities.Address;
 import com.dikshanta.restaurant.management.system.group_project.model.entities.User;
 import com.dikshanta.restaurant.management.system.group_project.repository.AddressRepository;
+import com.dikshanta.restaurant.management.system.group_project.repository.OrderRepository;
+import com.dikshanta.restaurant.management.system.group_project.repository.PaymentRepository;
 import com.dikshanta.restaurant.management.system.group_project.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,8 @@ public class UserService {
     private final SecurityAuditorAware securityAuditorAware;
     private final AddressRepository addressRepository;
     private final FileUploadService fileUploadService;
+    private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
 
     @Transactional
     public User registerUser(RegisterRequest registerRequest) {
@@ -45,11 +49,18 @@ public class UserService {
 
     }
 
+    @Transactional
     public void deleteUser(UserDeleteRequest userDeleteRequest) {
         if (!userRepository.existsById(userDeleteRequest.getId())) {
             throw new UserDoesnotExistsException("User does not exist");
         }
-        userRepository.deleteById(userDeleteRequest.getId());
+        Long userId = userDeleteRequest.getId();
+
+        // Delete child records in FK-safe order:
+        // payments -> orders -> user
+        paymentRepository.deleteByOrderUserId(userId);
+        orderRepository.deleteAllByUserId(userId);
+        userRepository.deleteById(userId);
     }
 
     public List<UserResponse> getCustomers() {

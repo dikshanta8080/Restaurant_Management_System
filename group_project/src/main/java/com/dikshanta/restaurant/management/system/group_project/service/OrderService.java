@@ -3,6 +3,7 @@ package com.dikshanta.restaurant.management.system.group_project.service;
 import com.dikshanta.restaurant.management.system.group_project.configurations.SecurityAuditorAware;
 import com.dikshanta.restaurant.management.system.group_project.dto.request.OrderCreateRequest;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.OrderItemResponse;
+import com.dikshanta.restaurant.management.system.group_project.dto.response.OrderPlacementResponse;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.OrderResponse;
 import com.dikshanta.restaurant.management.system.group_project.enums.OrderStatus;
 import com.dikshanta.restaurant.management.system.group_project.enums.Role;
@@ -15,8 +16,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +33,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final FoodItemRepository foodItemRepository;
     private final OrderItemRepository orderItemRepository;
+    private final PaymentRepository paymentRepository;
     private final SecurityAuditorAware securityAuditorAware;
 
     private Long getCurrentUserId() {
@@ -67,7 +72,6 @@ public class OrderService {
     }
 
     private Address resolveDeliveryAddress(User user, OrderCreateRequest request) {
-        // 1) Explicit address id wins.
         if (request.getAddressId() != null) {
             return addressRepository.findById(request.getAddressId())
                     .orElseThrow(() -> new RuntimeException("Address not found"));
@@ -113,7 +117,9 @@ public class OrderService {
             return;
         }
         boolean valid = switch (currentStatus) {
-            case PENDING -> EnumSet.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED).contains(nextStatus);
+            // Some flows (e.g. cash on delivery / test orders) allow restaurants to accept directly from PENDING.
+            case PENDING -> EnumSet.of(OrderStatus.PAID, OrderStatus.ACCEPTED, OrderStatus.REJECTED).contains(nextStatus);
+            case PAID -> EnumSet.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED).contains(nextStatus);
             case ACCEPTED -> nextStatus == OrderStatus.COMPLETED;
             case COMPLETED, REJECTED -> false;
         };
@@ -123,7 +129,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse placeOrder(OrderCreateRequest request) {
+    public OrderPlacementResponse placeOrder(OrderCreateRequest request) {
         Long userId = getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -133,36 +139,59 @@ public class OrderService {
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new RuntimeException("Order must contain at least one item");
         }
-        Order order = new Order();
-        order.setUser(user);
-        order.setDeliveryAddress(address);
-        order.setStatus(OrderStatus.PENDING);
-        order = orderRepository.save(order);
-
-        BigDecimal total = BigDecimal.ZERO;
+        // Split cart items by restaurant to ensure each restaurant receives its own order.
+        Map<Long, List<com.dikshanta.restaurant.management.system.group_project.dto.request.OrderItemRequest>> itemsByRestaurant = new HashMap<>();
 
         for (var itemReq : request.getItems()) {
             FoodItem foodItem = foodItemRepository.findById(itemReq.getFoodItemId())
                     .orElseThrow(() -> new RuntimeException("Food item not found"));
-
-            OrderItem orderItem = OrderItem.builder()
-                    .order(order)
-                    .foodItem(foodItem)
-                    .restaurant(foodItem.getRestaurant())
-                    .quantity(itemReq.getQuantity())
-                    .price(foodItem.getPrice())
-                    .status(OrderStatus.PENDING)
-                    .build();
-
-            total = total.add(foodItem.getPrice().multiply(new BigDecimal(itemReq.getQuantity())));
-            order.addOrderItem(orderItem);
+            Restaurant restaurant = foodItem.getRestaurant();
+            if (restaurant == null) {
+                throw new RuntimeException("Food item is not linked to any restaurant");
+            }
+            Long restaurantId = restaurant.getId();
+            itemsByRestaurant.computeIfAbsent(restaurantId, k -> new ArrayList<>()).add(itemReq);
         }
-        order.setTotalPrice(total);
-        order = orderRepository.save(order);
+
+        List<OrderResponse> placedOrders = new ArrayList<>();
+        BigDecimal grandTotal = BigDecimal.ZERO;
+
+        for (Map.Entry<Long, List<com.dikshanta.restaurant.management.system.group_project.dto.request.OrderItemRequest>> entry : itemsByRestaurant.entrySet()) {
+            Order order = new Order();
+            order.setUser(user);
+            order.setDeliveryAddress(address);
+            order.setStatus(OrderStatus.PENDING);
+            order = orderRepository.save(order);
+
+            BigDecimal orderTotal = BigDecimal.ZERO;
+            for (var itemReq : entry.getValue()) {
+                FoodItem foodItem = foodItemRepository.findById(itemReq.getFoodItemId())
+                        .orElseThrow(() -> new RuntimeException("Food item not found"));
+
+                OrderItem orderItem = OrderItem.builder()
+                        .order(order)
+                        .foodItem(foodItem)
+                        .restaurant(foodItem.getRestaurant())
+                        .quantity(itemReq.getQuantity())
+                        .price(foodItem.getPrice())
+                        .status(OrderStatus.PENDING)
+                        .build();
+
+                orderTotal = orderTotal.add(foodItem.getPrice().multiply(new BigDecimal(itemReq.getQuantity())));
+                order.addOrderItem(orderItem);
+            }
+            order.setTotalPrice(orderTotal);
+            order = orderRepository.save(order);
+            grandTotal = grandTotal.add(orderTotal);
+            placedOrders.add(mapToResponse(order));
+        }
 
         cartService.clearCart(userId);
 
-        return mapToResponse(order);
+        return OrderPlacementResponse.builder()
+                .orders(placedOrders)
+                .totalPrice(grandTotal)
+                .build();
     }
 
     public Page<OrderResponse> getUserOrders(Pageable pageable) {
@@ -231,5 +260,28 @@ public class OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         order.setTotalPrice(total);
         orderRepository.save(order);
+    }
+
+    @Transactional
+    public void deleteOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        Long userId = getCurrentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean isCustomer = order.getUser() != null && order.getUser().getId().equals(userId);
+        boolean isRestaurantOwner = order.getOrderItems().stream()
+                .anyMatch(item -> item.getRestaurant() != null && item.getRestaurant().getOwner().getId().equals(userId));
+        boolean isAdmin = user.getRole() == Role.ADMIN;
+
+        if (!isCustomer && !isRestaurantOwner && !isAdmin) {
+            throw new RuntimeException("Not authorized to delete this order");
+        }
+
+        // Deterministic deletion order to avoid FK violations on payments.order_id
+        paymentRepository.deleteByOrderId(orderId);
+        orderRepository.delete(order);
     }
 }

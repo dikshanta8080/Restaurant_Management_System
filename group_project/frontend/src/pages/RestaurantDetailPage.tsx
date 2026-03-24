@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { reviewService as rs } from '../services/reviewService';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '../utils/imageUtils';
+import BackButton from '../components/BackButton';
 
 const RestaurantDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -110,6 +111,7 @@ const RestaurantDetailPage: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <BackButton className="mb-5" />
         {/* Actions bar */}
         <div className="flex items-center justify-between mb-8">
           <div>

@@ -16,6 +16,10 @@ export const adminService = {
   updateRestaurantStatus: (request: { restaurantId: number; restaurantStatus: string }): Promise<any> =>
     api.put('/api/v1/admin/updateStatus', request).then(r => r.data),
 
+  // DELETE /api/v1/admin/restaurants/{id}
+  deleteRestaurant: (restaurantId: number): Promise<any> =>
+    api.delete(`/api/v1/admin/restaurants/${restaurantId}`).then(r => r.data),
+
   // DELETE /api/v1/admin/deleteUser (uses @ModelAttribute so send as query params)
   deleteUser: (userId: number): Promise<any> =>
     api.delete('/api/v1/admin/deleteUser', { params: { id: userId } }).then(r => r.data),

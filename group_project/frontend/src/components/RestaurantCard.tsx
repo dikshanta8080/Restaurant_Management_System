@@ -22,12 +22,22 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
     setBrokenImage(false);
   }, [imageUrl]);
 
+  const locationText = [
+    restaurant.street,
+    restaurant.city,
+    restaurant.district,
+    restaurant.province,
+  ].filter(Boolean).join(', ');
+
+  const ratingText = typeof restaurant.averageRating === 'number'
+    ? restaurant.averageRating.toFixed(1)
+    : '—';
+
   return (
     <Link
       to={`/restaurants/${restaurant.id}`}
       className="card overflow-hidden group hover:-translate-y-1 transition-all duration-300 flex flex-col"
     >
-      {/* Image */}
       <div className="relative h-48 bg-gradient-to-br from-orange-100 to-red-100 overflow-hidden">
         {imageUrl && !brokenImage ? (
           <img
@@ -48,7 +58,6 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-4 flex flex-col flex-1">
         <div className="flex items-start justify-between mb-2">
           <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-orange-600 transition-colors">
@@ -64,12 +73,12 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         <div className="flex items-center gap-2 mt-auto pt-2 border-t border-gray-50">
           <div className="flex items-center gap-1 text-yellow-500">
             <Star size={14} className="fill-yellow-400" />
-            <span className="text-xs font-medium text-gray-600">4.2</span>
+            <span className="text-xs font-medium text-gray-600">{ratingText}</span>
           </div>
           <span className="text-gray-300">•</span>
           <div className="flex items-center gap-1 text-gray-500 text-xs">
             <MapPin size={12} />
-            <span>By {restaurant.ownerName}</span>
+            <span>{locationText || restaurant.ownerName}</span>
           </div>
         </div>
       </div>

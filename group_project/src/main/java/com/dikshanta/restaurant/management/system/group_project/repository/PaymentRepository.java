@@ -11,9 +11,11 @@ import java.util.Optional;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
-    Optional<Payment> findByOrderId(Long orderId);
+    Optional<Payment> findFirstByOrderIdOrderByIdDesc(Long orderId);
     Optional<Payment> findByTransactionId(String transactionId);
     List<Payment> findByUserId(Long userId);
+    void deleteByOrderId(Long orderId);
+    void deleteByOrderUserId(Long userId);
 
     @Query("""
             SELECT DISTINCT p

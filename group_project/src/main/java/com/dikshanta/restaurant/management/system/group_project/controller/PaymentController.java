@@ -1,8 +1,11 @@
 package com.dikshanta.restaurant.management.system.group_project.controller;
 
+import com.dikshanta.restaurant.management.system.group_project.dto.request.CreateCheckoutSessionRequest;
+import com.dikshanta.restaurant.management.system.group_project.dto.response.CheckoutSessionResponse;
 import com.dikshanta.restaurant.management.system.group_project.dto.response.PaymentResponse;
 import com.dikshanta.restaurant.management.system.group_project.model.ApiResponse;
 import com.dikshanta.restaurant.management.system.group_project.service.PaymentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,15 +20,35 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/customer/payments/pay-now")
-    public ResponseEntity<ApiResponse<PaymentResponse>> payNowDummy(@RequestParam Long orderId) {
-        PaymentResponse response = paymentService.payNowDummy(orderId);
-        ApiResponse<PaymentResponse> apiResponse = ApiResponse.<PaymentResponse>builder()
+    @PostMapping("/customer/payments/create-checkout-session")
+    public ResponseEntity<ApiResponse<CheckoutSessionResponse>> createCheckoutSession(@RequestBody @Valid CreateCheckoutSessionRequest request) {
+        CheckoutSessionResponse response = paymentService.createCheckoutSession(request.getOrderId());
+        ApiResponse<CheckoutSessionResponse> apiResponse = ApiResponse.<CheckoutSessionResponse>builder()
                 .httpStatus(HttpStatus.OK)
-                .message("Dummy payment completed")
+                .message("Stripe checkout session created")
                 .responseObject(response)
                 .build();
         return ResponseEntity.ok(apiResponse);
+    }
+
+    @PostMapping("/customer/payments/order/{orderId}/confirm")
+    public ResponseEntity<ApiResponse<PaymentResponse>> markOrderPaid(@PathVariable Long orderId, @RequestParam String transactionId) {
+        PaymentResponse response = paymentService.markOrderPaid(orderId, transactionId);
+        ApiResponse<PaymentResponse> apiResponse = ApiResponse.<PaymentResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Order marked as paid")
+                .responseObject(response)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PostMapping("/payments/webhook")
+    public ResponseEntity<String> stripeWebhook(
+            @RequestBody String payload,
+            @RequestHeader("Stripe-Signature") String stripeSignature
+    ) {
+        paymentService.handleWebhook(payload, stripeSignature);
+        return ResponseEntity.ok("Webhook processed");
     }
 
     @GetMapping("/customer/payments/order/{orderId}")

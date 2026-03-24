@@ -19,4 +19,11 @@ public class RestaurantResponse {
     private RestaurantStatus status;
     private Double averageRating;
     private Integer reviewCount;
+
+    // Nepal location metadata (used for filtering/UI)
+    private Long addressId;
+    private String province;
+    private String district;
+    private String city;
+    private String street;
 }

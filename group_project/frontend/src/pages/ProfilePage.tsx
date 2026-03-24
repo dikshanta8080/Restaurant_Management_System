@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { SkeletonText } from '../components/Skeleton';
 import { getImageUrl } from '../utils/imageUtils';
+import BackButton from '../components/BackButton';
 
 const ProfilePage: React.FC = () => {
   const { user: authUser } = useAuth();
@@ -50,6 +51,7 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+        <BackButton className="mb-6" />
         <h1 className="text-3xl font-black text-gray-900 mb-8">My Profile</h1>
         <div className="card p-8">
           {isLoading ? (

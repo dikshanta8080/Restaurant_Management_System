@@ -4,6 +4,7 @@ import { CreditCard } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { PaymentResponse } from '../../types/payment';
 import { SkeletonRow } from '../../components/Skeleton';
+import BackButton from '../../components/BackButton';
 
 const AllPaymentsAdmin: React.FC = () => {
   const { data: payments, isLoading } = useQuery({
@@ -14,6 +15,7 @@ const AllPaymentsAdmin: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <BackButton className="mb-6" redirectTo="/admin" />
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
             <CreditCard size={22} className="text-emerald-600" />

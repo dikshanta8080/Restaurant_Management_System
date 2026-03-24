@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package } from 'lucide-react';
 import { cartService } from '../services/cartService';
@@ -9,9 +9,18 @@ import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { SkeletonRow } from '../components/Skeleton';
+import BackButton from '../components/BackButton';
+import {
+  DEFAULT_STREETS,
+  NEPAL_DISTRICT_TO_CITIES,
+  NEPAL_DISTRICTS_ALL,
+  NEPAL_DISTRICTS_BY_PROVINCE,
+  NEPAL_PROVINCES,
+  type NepalProvince,
+} from '../utils/nepalLocations';
 
 const CartPage: React.FC = () => {
-  const { cartItems, setCartItems, removeItem, updateItem, cartTotal, clearCart } = useCart();
+  const { cartItems, setCartItems, removeItem, updateItem, cartTotal } = useCart();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [useSavedAddress, setUseSavedAddress] = useState(true);
@@ -21,6 +30,16 @@ const CartPage: React.FC = () => {
     city: '',
     street: '',
   });
+
+  const districtOptions =
+    overrideAddress.province &&
+    NEPAL_DISTRICTS_BY_PROVINCE[overrideAddress.province as NepalProvince]
+      ? NEPAL_DISTRICTS_BY_PROVINCE[overrideAddress.province as NepalProvince]
+      : NEPAL_DISTRICTS_ALL;
+
+  const cityOptions = overrideAddress.district
+    ? NEPAL_DISTRICT_TO_CITIES[overrideAddress.district] ?? []
+    : [];
 
   const { isLoading } = useQuery({
     queryKey: ['cart'],
@@ -107,21 +126,28 @@ const CartPage: React.FC = () => {
         street: overrideAddress.street.trim(),
       });
     },
-    onSuccess: async (order) => {
-      try {
-        await paymentService.payNowDummy(order.id);
-        clearCart();
-        toast.success('Order placed and paid successfully (dummy payment)!');
-        navigate(`/payment/success?order_id=${order.id}`);
-      } catch (e: any) {
-        toast.error(e?.response?.data?.message || 'Dummy payment failed, order created without payment');
-        navigate(`/payment/cancel?order_id=${order.id}`);
+    onSuccess: async (placement) => {
+      const orders = placement?.orders ?? [];
+      if (!orders.length) {
+        toast.error('No orders were created from your cart.');
         return;
       }
       try {
-        queryClient.invalidateQueries({ queryKey: ['orders'] });
-      } catch {
-        // ignore query cache invalidation errors, UI still navigates safely
+        if (orders.length > 1) {
+          toast('Multiple restaurant orders created. Redirecting to payment for the first order.');
+        }
+        const primaryOrder = orders[0];
+        const sessionRes = await paymentService.createCheckoutSession(primaryOrder.id);
+        const checkout = sessionRes?.responseObject;
+        if (!checkout?.sessionId || !checkout?.checkoutUrl) {
+          throw new Error('Stripe checkout session was not returned by backend');
+        }
+        window.location.href = checkout.checkoutUrl;
+      } catch (e: any) {
+        const ids = orders.map(o => o.id).join(',');
+        toast.error(e?.response?.data?.message || e?.message || 'Payment initialization failed. Your order was created and can be tracked from Orders.');
+        navigate(`/payment-cancel?order_ids=${ids}`);
+        return;
       }
     },
     onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to place order'),
@@ -132,6 +158,7 @@ const CartPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <BackButton className="mb-6" />
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
             <ShoppingCart size={22} className="text-orange-600" />
@@ -159,7 +186,6 @@ const CartPage: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Cart Items */}
             <div className="lg:col-span-2 space-y-3">
               {cartItems.map(item => (
                 <div key={item.id} className="card p-4 flex items-center gap-4">
@@ -200,7 +226,6 @@ const CartPage: React.FC = () => {
               ))}
             </div>
 
-            {/* Order Summary */}
             <div className="card p-6 h-fit sticky top-24">
               <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
               <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-4">
@@ -234,19 +259,37 @@ const CartPage: React.FC = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                           <div>
                             <label className="label">Province</label>
-                            <input
+                            <select
                               value={overrideAddress.province}
-                              onChange={(e) => setOverrideAddress((p) => ({ ...p, province: e.target.value }))}
+                              onChange={(e) =>
+                                setOverrideAddress((p) => ({ ...p, province: e.target.value, district: '', city: '' }))
+                              }
                               className="input"
-                            />
+                            >
+                              <option value="">Select Province</option>
+                              {NEPAL_PROVINCES.map(p => (
+                                <option key={p} value={p}>
+                                  {p}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div>
                             <label className="label">District</label>
-                            <input
+                            <select
                               value={overrideAddress.district}
-                              onChange={(e) => setOverrideAddress((p) => ({ ...p, district: e.target.value }))}
+                              onChange={(e) =>
+                                setOverrideAddress((p) => ({ ...p, district: e.target.value, city: '' }))
+                              }
                               className="input"
-                            />
+                            >
+                              <option value="">Select District</option>
+                              {districtOptions.map(d => (
+                                <option key={d} value={d}>
+                                  {d}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           <div>
                             <label className="label">City</label>
@@ -254,7 +297,14 @@ const CartPage: React.FC = () => {
                               value={overrideAddress.city}
                               onChange={(e) => setOverrideAddress((p) => ({ ...p, city: e.target.value }))}
                               className="input"
+                              list="cart-city-suggestions"
+                              placeholder="e.g. Kathmandu"
                             />
+                            <datalist id="cart-city-suggestions">
+                              {cityOptions.map(c => (
+                                <option key={c} value={c} />
+                              ))}
+                            </datalist>
                           </div>
                           <div>
                             <label className="label">Street</label>
@@ -262,7 +312,14 @@ const CartPage: React.FC = () => {
                               value={overrideAddress.street}
                               onChange={(e) => setOverrideAddress((p) => ({ ...p, street: e.target.value }))}
                               className="input"
+                              list="cart-street-suggestions"
+                              placeholder="e.g. Thamel"
                             />
+                            <datalist id="cart-street-suggestions">
+                              {DEFAULT_STREETS.map(s => (
+                                <option key={s} value={s} />
+                              ))}
+                            </datalist>
                           </div>
                         </div>
                       )}

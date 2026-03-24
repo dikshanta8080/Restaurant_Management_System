@@ -8,6 +8,7 @@ import { SkeletonRow } from '../../components/Skeleton';
 import toast from 'react-hot-toast';
 import { FoodItemResponse } from '../../types/foodItem';
 import { getImageUrl } from '../../utils/imageUtils';
+import BackButton from '../../components/BackButton';
 
 interface FoodForm {
   name: string;
@@ -63,6 +64,8 @@ const FoodItemsManagement: React.FC = () => {
     onSuccess: () => {
       toast.success('Food item added!');
       queryClient.invalidateQueries({ queryKey: ['restaurant-food-items'] });
+      queryClient.invalidateQueries({ queryKey: ['home-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['restaurants'] });
       setShowModal(false); setForm(EMPTY_FORM); setPreview(null);
     },
     onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to add item'),
@@ -79,6 +82,8 @@ const FoodItemsManagement: React.FC = () => {
     onSuccess: () => {
       toast.success('Food item updated!');
       queryClient.invalidateQueries({ queryKey: ['restaurant-food-items'] });
+      queryClient.invalidateQueries({ queryKey: ['home-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['restaurants'] });
       setShowModal(false); setEditItem(null); setForm(EMPTY_FORM);
     },
     onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to update item'),
@@ -89,6 +94,8 @@ const FoodItemsManagement: React.FC = () => {
     onSuccess: () => {
       toast.success('Food item deleted');
       queryClient.invalidateQueries({ queryKey: ['restaurant-food-items'] });
+      queryClient.invalidateQueries({ queryKey: ['home-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['restaurants'] });
     },
     onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to delete'),
   });
@@ -130,6 +137,7 @@ const FoodItemsManagement: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <BackButton className="mb-6" redirectTo="/restaurant/dashboard" />
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">

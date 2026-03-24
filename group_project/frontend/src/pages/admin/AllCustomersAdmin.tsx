@@ -5,6 +5,7 @@ import { adminService } from '../../services/adminService';
 import { SkeletonRow } from '../../components/Skeleton';
 import Modal from '../../components/Modal';
 import toast from 'react-hot-toast';
+import BackButton from '../../components/BackButton';
 
 const AllCustomersAdmin: React.FC = () => {
   const queryClient = useQueryClient();
@@ -35,6 +36,7 @@ const AllCustomersAdmin: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <BackButton className="mb-6" redirectTo="/admin" />
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
             <Users size={22} className="text-blue-600" />

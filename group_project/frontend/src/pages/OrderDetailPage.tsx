@@ -1,15 +1,17 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Package, ArrowLeft, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { orderService } from '../services/orderService';
 import { OrderStatus } from '../types/order';
 import { SkeletonText } from '../components/Skeleton';
+import BackButton from '../components/BackButton';
 
-const statusSteps: OrderStatus[] = ['PENDING', 'ACCEPTED', 'COMPLETED'];
+const statusSteps: OrderStatus[] = ['PENDING', 'PAID', 'ACCEPTED', 'COMPLETED'];
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; icon: React.ReactNode }> = {
   PENDING: { label: 'Pending', color: 'text-yellow-600 bg-yellow-50', icon: <Clock size={20} className="text-yellow-500" /> },
+  PAID: { label: 'Paid', color: 'text-emerald-700 bg-emerald-50', icon: <CheckCircle size={20} className="text-emerald-600" /> },
   ACCEPTED: { label: 'Accepted / Preparing', color: 'text-blue-600 bg-blue-50', icon: <Loader2 size={20} className="text-blue-500 animate-spin" /> },
   COMPLETED: { label: 'Completed', color: 'text-green-600 bg-green-50', icon: <CheckCircle size={20} className="text-green-500" /> },
   REJECTED: { label: 'Rejected', color: 'text-red-600 bg-red-50', icon: <XCircle size={20} className="text-red-500" /> },
@@ -45,12 +47,7 @@ const OrderDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 page-enter">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <button
-          onClick={() => navigate('/orders')}
-          className="flex items-center gap-2 text-gray-500 hover:text-orange-600 font-medium mb-6 transition-colors"
-        >
-          <ArrowLeft size={16} /> Back to Orders
-        </button>
+        <BackButton className="mb-6" redirectTo="/orders" label="Back to Orders" />
 
         <div className="card p-6 mb-6">
           <div className="flex items-center justify-between mb-6">
@@ -92,8 +89,9 @@ const OrderDetailPage: React.FC = () => {
                         done ? 'bg-orange-500 text-white shadow-sm shadow-orange-200' : 'bg-gray-200 text-gray-400'
                       } ${active ? 'ring-4 ring-orange-100' : ''}`}>
                         {i === 0 && <Clock size={18} />}
-                        {i === 1 && <Loader2 size={18} className={active ? 'animate-spin' : ''} />}
-                        {i === 2 && <CheckCircle size={18} />}
+                        {i === 1 && <CheckCircle size={18} />}
+                        {i === 2 && <Loader2 size={18} className={active ? 'animate-spin' : ''} />}
+                        {i === 3 && <CheckCircle size={18} />}
                       </div>
                       <p className={`text-xs font-medium mt-2 ${done ? 'text-orange-600' : 'text-gray-400'}`}>
                         {statusConfig[step].label.split('/')[0].trim()}

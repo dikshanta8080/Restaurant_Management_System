@@ -20,7 +20,7 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
     @Query("""
             SELECT f FROM FoodItem f
             WHERE (:categoryId IS NULL OR f.category.id = :categoryId)
-              AND (:search IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search IS NULL OR LOWER(CAST(f.name AS string)) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')))
               AND (:minPrice IS NULL OR f.price >= :minPrice)
               AND (:maxPrice IS NULL OR f.price <= :maxPrice)
             """)

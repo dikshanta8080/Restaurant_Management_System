@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShoppingCart, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Star } from 'lucide-react';
 import { FoodItemResponse } from '../types/foodItem';
 import { cartService } from '../services/cartService';
 import { useCart } from '../context/CartContext';
@@ -11,9 +11,11 @@ import { getImageUrl } from '../utils/imageUtils';
 interface FoodItemCardProps {
   item: FoodItemResponse;
   categoryName?: string;
+  restaurantName?: string;
+  restaurantRating?: number;
 }
 
-const FoodItemCard: React.FC<FoodItemCardProps> = ({ item, categoryName }) => {
+const FoodItemCard: React.FC<FoodItemCardProps> = ({ item, categoryName, restaurantName, restaurantRating }) => {
   const { isAuthenticated } = useAuth();
   const { addItem } = useCart();
   const navigate = useNavigate();
@@ -46,7 +48,6 @@ const FoodItemCard: React.FC<FoodItemCardProps> = ({ item, categoryName }) => {
 
   return (
     <div className={`card overflow-hidden group transition-all duration-300 hover:-translate-y-0.5 ${!item.available ? 'opacity-60' : ''}`}>
-      {/* Image */}
       <div className="relative h-44 bg-gradient-to-br from-orange-50 to-amber-50 overflow-hidden">
         {imageUrl && !imageFailed ? (
           <img
@@ -72,7 +73,6 @@ const FoodItemCard: React.FC<FoodItemCardProps> = ({ item, categoryName }) => {
         )}
       </div>
 
-      {/* Content */}
       <div className="p-4">
         <div className="flex justify-between items-start mb-1">
           <h3 className="font-bold text-gray-900 leading-tight">{item.name}</h3>
@@ -80,13 +80,29 @@ const FoodItemCard: React.FC<FoodItemCardProps> = ({ item, categoryName }) => {
             Rs. {Number(item.price).toFixed(2)}
           </span>
         </div>
+
+        {(restaurantName || typeof restaurantRating === 'number') && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mt-1">
+            {typeof restaurantRating === 'number' && (
+              <span className="inline-flex items-center gap-1 text-yellow-600">
+                <Star size={14} className="fill-yellow-400" />
+                <span className="font-semibold">{restaurantRating.toFixed(1)}</span>
+              </span>
+            )}
+            {restaurantName && (
+              <span className="text-gray-600">
+                from <span className="font-medium text-gray-800">{restaurantName}</span>
+              </span>
+            )}
+          </div>
+        )}
+
         {item.description && (
           <p className="text-sm text-gray-500 mb-3 line-clamp-2">{item.description}</p>
         )}
 
         {item.available && (
           <div className="flex items-center gap-2 mt-3">
-            {/* Qty controls */}
             <div className="flex items-center gap-1 border border-gray-200 rounded-xl overflow-hidden">
               <button
                 onClick={() => setQty(q => Math.max(1, q - 1))}

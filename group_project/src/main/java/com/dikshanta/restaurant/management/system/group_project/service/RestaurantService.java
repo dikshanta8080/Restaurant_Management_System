@@ -208,6 +208,32 @@ public class RestaurantService {
         restaurantRepository.delete(restaurant);
     }
 
+    @Transactional
+    public void deleteRestaurantByAdmin(Long id) {
+        Restaurant restaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new RestaurantDoesNotExistsException("Restaurant not found"));
+
+        User owner = restaurant.getOwner();
+        if (owner != null) {
+            owner.setRestaurant(null);
+            if (owner.getRole() == Role.RESTAURANT) {
+                boolean hasOtherApproved = restaurantRepository
+                        .findAllByStatus(RestaurantStatus.APPROVED)
+                        .stream()
+                        .anyMatch(r -> r.getOwner() != null
+                                && r.getOwner().getId().equals(owner.getId())
+                                && !r.getId().equals(restaurant.getId()));
+                if (!hasOtherApproved) {
+                    owner.setRole(Role.CUSTOMER);
+                }
+            }
+            userRepository.save(owner);
+        }
+
+        // Cascades remove food items/order items/reviews based on entity mappings.
+        restaurantRepository.delete(restaurant);
+    }
+
 
     private User getCurrentUser() {
         Long userId = securityAuditorAware.getCurrentAuditor()
@@ -217,6 +243,15 @@ public class RestaurantService {
     }
 
     private void validateOwnerOrAdmin(Restaurant restaurant, User currentUser, String operation) {
+        // Seed/demo restaurants may have no owner; only admins can manage them.
+        if (restaurant.getOwner() == null) {
+            if (currentUser.getRole() != Role.ADMIN) {
+                throw new UnauthorizedReviewAccessException(
+                        "You are not authorized to " + operation + " this restaurant");
+            }
+            return;
+        }
+
         boolean isOwner = restaurant.getOwner().getId().equals(currentUser.getId());
         boolean isAdmin = currentUser.getRole() == Role.ADMIN;
         if (!isOwner && !isAdmin) {
@@ -231,15 +266,23 @@ public class RestaurantService {
         double average = reviews.isEmpty()
                 ? 0.0
                 : reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
+
+        var address = restaurant.getAddress();
+        String ownerName = restaurant.getOwner() != null ? restaurant.getOwner().getName() : null;
         return RestaurantResponse.builder()
                 .id(restaurant.getId())
                 .name(restaurant.getName())
                 .description(restaurant.getDescription())
                 .imageUrl(restaurant.getImageUrl())
-                .ownerName(restaurant.getOwner().getName())
+                .ownerName(ownerName)
                 .status(restaurant.getStatus())
                 .averageRating(Math.round(average * 10.0) / 10.0)
                 .reviewCount(reviews.size())
+                .addressId(address != null ? address.getId() : null)
+                .province(address != null ? address.getProvince() : null)
+                .district(address != null ? address.getDistrict() : null)
+                .city(address != null ? address.getCity() : null)
+                .street(address != null ? address.getStreet() : null)
                 .build();
     }
 

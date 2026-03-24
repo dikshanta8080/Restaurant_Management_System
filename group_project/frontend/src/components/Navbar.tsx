@@ -60,9 +60,11 @@ const Navbar: React.FC = () => {
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-6">
-              <Link to="/restaurants" className="text-gray-600 hover:text-orange-500 font-medium transition-colors text-sm">
-                Restaurants
-              </Link>
+              {(!isAuthenticated || user?.role === 'CUSTOMER') && (
+                <Link to="/restaurants" className="text-gray-600 hover:text-orange-500 font-medium transition-colors text-sm">
+                  Restaurants
+                </Link>
+              )}
               {!isAuthenticated && (
                 <Link to="/register-restaurant" className="text-gray-600 hover:text-orange-500 font-medium transition-colors text-sm">
                   List Restaurant
@@ -191,7 +193,9 @@ const Navbar: React.FC = () => {
               )}
 
               {[
-                { to: '/restaurants', label: 'Browse Restaurants' },
+                ...((!isAuthenticated || user?.role === 'CUSTOMER') ? [
+                  { to: '/restaurants', label: 'Browse Restaurants' },
+                ] : []),
                 ...(isAuthenticated && user?.role === 'CUSTOMER' ? [
                   { to: '/orders', label: 'My Orders' },
                   { to: '/cart', label: 'Cart' },

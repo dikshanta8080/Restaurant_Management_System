@@ -25,4 +25,11 @@ utils:
 file:
   upload-dir: "uploads/"
 
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY:sk_test_51TDyl5DUenBCMGps4cmdolomqb907nQSrI1a8lPeLBf4Pnj9QpLaInvWAnuTHtQQgn768SWIlmSwOEQECzTN3bUa00N3TEX2GE}
+  publishable-key: ${STRIPE_PUBLISHABLE_KEY:pk_test_51TDyl5DUenBCMGpsNNqeQkDwSSmnexCdjUcLTQ2pysN4Hy8he420vqLoG357pZi11M6Ft18I5SDJ8fUb3U4a71Sv00izZRbNwr}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  success-url: ${STRIPE_SUCCESS_URL:http://localhost:5173/payment-success}
+  cancel-url: ${STRIPE_CANCEL_URL:http://localhost:5173/payment-cancel}
+
 
