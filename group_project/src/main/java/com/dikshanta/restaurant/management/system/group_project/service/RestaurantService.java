@@ -98,12 +98,12 @@ public class RestaurantService {
         restaurant.setStatus(request.getRestaurantStatus());
         restaurantRepository.save(restaurant);
 
-        // Auto-elevate / demote the owner's role based on approval status
+
         User owner = restaurant.getOwner();
         if (request.getRestaurantStatus() == RestaurantStatus.APPROVED) {
             owner.setRole(Role.RESTAURANT);
         } else {
-            // REJECTED or PENDING → revert to CUSTOMER if they have no other approved restaurant
+
             boolean hasOtherApproved = restaurantRepository
                     .findAllByStatus(RestaurantStatus.APPROVED)
                     .stream()
@@ -153,7 +153,7 @@ public class RestaurantService {
         return responses;
     }
 
-    // ── Owner's own restaurant ───────────────────────────────────────────────
+
 
 
     public RestaurantResponse getOwnRestaurant() {
@@ -230,7 +230,7 @@ public class RestaurantService {
             userRepository.save(owner);
         }
 
-        // Cascades remove food items/order items/reviews based on entity mappings.
+
         restaurantRepository.delete(restaurant);
     }
 

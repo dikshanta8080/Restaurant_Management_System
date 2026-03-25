@@ -40,7 +40,7 @@ public class ReviewService {
 
         User currentUser = getCurrentUser();
 
-        // Only customers are allowed to leave reviews
+
         if (currentUser.getRole() != Role.CUSTOMER) {
             throw new OnlyCustomerException("Only customers are allowed to submit reviews");
         }
@@ -144,10 +144,7 @@ public class ReviewService {
         }
     }
 
-    /**
-     * Passes only if the current user is the owner of the review.
-     * Used for UPDATE — admins should not silently edit a user's review text.
-     */
+
     private void validateOwnerOnly(Review review) {
         User currentUser = getCurrentUser();
         if (!review.getUser().getId().equals(currentUser.getId())) {
@@ -156,15 +153,7 @@ public class ReviewService {
         }
     }
 
-    /**
-     * Passes if the current user is the owner OR has the ADMIN role.
-     * Used for DELETE — admins can remove any review for moderation.
-     * <p>
-     * BUG FIXED: The original code had a single validateReviewOwnership() used for
-     * both update and delete, which made it impossible for admins to delete reviews
-     * they did not author.  Split into two separate validators so the rules are
-     * applied correctly per operation.
-     */
+
     private void validateOwnerOrAdmin(Review review) {
         User currentUser = getCurrentUser();
         boolean isOwner = review.getUser().getId().equals(currentUser.getId());

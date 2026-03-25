@@ -20,7 +20,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<ExceptionResponse>> handleUserAlreadyExistsException(UserAlreadyExistsException e) {
         Map<String, String> errorMap = new HashMap<>();
-        // Frontend can display this under the `email` field.
         errorMap.put("email", e.getMessage());
         return buildExceptionResponse(
                 HttpStatus.CONFLICT,

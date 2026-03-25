@@ -13,7 +13,6 @@ public class PaymentStatusConstraintLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Keep enum check constraint aligned with PaymentStatus values.
         jdbcTemplate.execute("ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_status_check");
         jdbcTemplate.execute(
                 "ALTER TABLE payments ADD CONSTRAINT payments_status_check " +

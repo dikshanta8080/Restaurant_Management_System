@@ -19,8 +19,7 @@ public class OrderCreateRequest {
     @Positive(message = "Address id must be positive")
     private Long addressId;
 
-    // Optional delivery address override (used when user wants a different address).
-    // If any of these fields are provided, all must be provided by the backend logic.
+
     @Size(max = 100, message = "Province is too long")
     private String province;
 

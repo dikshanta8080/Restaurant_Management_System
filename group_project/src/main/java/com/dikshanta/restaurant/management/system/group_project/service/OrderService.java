@@ -77,13 +77,13 @@ public class OrderService {
                     .orElseThrow(() -> new RuntimeException("Address not found"));
         }
 
-        // 2) Optional override address fields (used when user wants a different delivery address).
+
         boolean hasAnyOverride =
                 request.getProvince() != null || request.getDistrict() != null ||
                         request.getCity() != null || request.getStreet() != null;
 
         if (hasAnyOverride) {
-            // Require all override fields (prevents partial addresses).
+
             if (isBlank(request.getProvince()) || isBlank(request.getDistrict()) ||
                     isBlank(request.getCity()) || isBlank(request.getStreet())) {
                 throw new RuntimeException("All delivery address fields must be provided (province, district, city, street)");
@@ -98,13 +98,12 @@ public class OrderService {
             return addressRepository.save(override);
         }
 
-        // 3) Default to user's saved address.
+
         if (user.getAddress() != null) {
             return user.getAddress();
         }
 
-        // Delivery address is optional for now (frontend may not collect it yet).
-        // Payment/order flow should still be testable end-to-end.
+
         return null;
     }
 
@@ -117,7 +116,7 @@ public class OrderService {
             return;
         }
         boolean valid = switch (currentStatus) {
-            // Some flows (e.g. cash on delivery / test orders) allow restaurants to accept directly from PENDING.
+
             case PENDING -> EnumSet.of(OrderStatus.PAID, OrderStatus.ACCEPTED, OrderStatus.REJECTED).contains(nextStatus);
             case PAID -> EnumSet.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED).contains(nextStatus);
             case ACCEPTED -> nextStatus == OrderStatus.COMPLETED;
@@ -139,7 +138,7 @@ public class OrderService {
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new RuntimeException("Order must contain at least one item");
         }
-        // Split cart items by restaurant to ensure each restaurant receives its own order.
+
         Map<Long, List<com.dikshanta.restaurant.management.system.group_project.dto.request.OrderItemRequest>> itemsByRestaurant = new HashMap<>();
 
         for (var itemReq : request.getItems()) {
@@ -280,7 +279,6 @@ public class OrderService {
             throw new RuntimeException("Not authorized to delete this order");
         }
 
-        // Deterministic deletion order to avoid FK violations on payments.order_id
         paymentRepository.deleteByOrderId(orderId);
         orderRepository.delete(order);
     }

@@ -56,8 +56,7 @@ public class UserService {
         }
         Long userId = userDeleteRequest.getId();
 
-        // Delete child records in FK-safe order:
-        // payments -> orders -> user
+
         paymentRepository.deleteByOrderUserId(userId);
         orderRepository.deleteAllByUserId(userId);
         userRepository.deleteById(userId);

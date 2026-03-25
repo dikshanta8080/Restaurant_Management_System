@@ -26,7 +26,7 @@ public class LegacyPublicController {
     private final RestaurantService restaurantService;
     private final FoodItemService foodItemService;
 
-    // GET /restaurants  (public, approved only)
+
     @GetMapping("/restaurants")
     public ResponseEntity<List<RestaurantResponse>> restaurants(
             @RequestParam(required = false) String search,
@@ -37,7 +37,7 @@ public class LegacyPublicController {
         return ResponseEntity.ok(restaurantService.getRestaurants(search, minRating, sortBy, sortDir));
     }
 
-    // GET /restaurants/approved (alias of /restaurants)
+
     @GetMapping("/restaurants/approved")
     public ResponseEntity<List<RestaurantResponse>> approvedRestaurants(
             @RequestParam(required = false) String search,
@@ -48,7 +48,7 @@ public class LegacyPublicController {
         return ResponseEntity.ok(restaurantService.getRestaurants(search, minRating, sortBy, sortDir));
     }
 
-    // GET /foods (paginated, mirrors /api/v1/restaurant/food-items)
+
     @GetMapping("/foods")
     public ResponseEntity<Page<FoodItemResponse>> foods(
             @RequestParam(defaultValue = "0") int pageNo,
@@ -62,7 +62,7 @@ public class LegacyPublicController {
         return ResponseEntity.ok(foodItemService.getAllFoodItems(null, null, null, null, PageRequest.of(Math.max(pageNo, 0), pageSize, sort)));
     }
 
-    // GET /foods/all (non-paginated convenience)
+
     @GetMapping("/foods/all")
     public ResponseEntity<List<FoodItemResponse>> allFoods() {
         return ResponseEntity.ok(
