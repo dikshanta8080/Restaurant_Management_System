@@ -15,23 +15,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Review extends DateAuditable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private Integer rating;
     private String comment;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
     @JsonBackReference("reviews-reference")
     private Restaurant restaurant;
-
     @ManyToOne
     @JoinColumn(name = "food_item_id")
     private FoodItem foodItem;
