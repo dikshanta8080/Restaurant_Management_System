@@ -145,11 +145,11 @@ const LoginPage: React.FC = () => {
           </form>
 
           {/* Quick credentials hint */}
-          <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+          {/* <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
             <p className="font-semibold mb-1">Admin credentials:</p>
-            <p>Email: dikshantaacharya04@gmail.com</p>
+            <p>Email: admin@example.com</p>
             <p>Password: @Dikshyant9898</p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
